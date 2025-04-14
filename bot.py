@@ -32,6 +32,7 @@ def authorized_only(handler_func):
 
         if chat.type == "channel":
             print(f"📢 Message from channel: {chat.title} (ID: {chat.id})")
+            logging.info(f"Message from channel: {chat.title} (ID: {chat.id})")
 
         user_id = str(user.id)
 
