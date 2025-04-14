@@ -34,7 +34,7 @@ def authorized_only(handler_func):
         if user_id not in ALLOWED_USERS:
             msg = f"❌ Unauthorized access attempt by {user.full_name} (ID: {user_id})"
             logging.warning(msg)
-            await update.message.reply_text("🚫 Access denied.")
+            # await update.message.reply_text("🚫 Access denied.")
             await log_to_channel(context.application, msg)
             return
 
