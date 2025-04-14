@@ -14,7 +14,7 @@ LOG_CHANNEL_ID = os.getenv("LOG_CHANNEL_ID")
 if not BOT_TOKEN:
     raise ValueError("BOT_TOKEN is not set in the .env file")
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.WARNING)
 
 # Function to send logs to Telegram channel
 async def log_to_channel(application, message: str):
@@ -28,12 +28,7 @@ async def log_to_channel(application, message: str):
 def authorized_only(handler_func):
     async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE):
         user = update.effective_user
-        chat = update.effective_chat
-
-        if chat.type == "channel":
-            print(f"📢 Message from channel: {chat.title} (ID: {chat.id})")
-            logging.info(f"Message from channel: {chat.title} (ID: {chat.id})")
-
+        
         user_id = str(user.id)
 
         if user_id not in ALLOWED_USERS:
