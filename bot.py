@@ -86,53 +86,58 @@ async def ping(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("🏓 Pong!")
     await log_to_channel(context.application, f"📡 /ping by {update.effective_user.full_name} (ID: {update.effective_user.id})")
 
+# @authorized_only
+# async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
+#     document = update.message.document
+#     file_id = document.file_id
+#     file_name = document.file_name
+#     file_size = document.file_size
+
+#     print(f"[DEBUG] Received file: {file_name} ({file_size} bytes)")
+
+#     try:
+#         print("getting file...")
+#         tg_file = await get_file_with_retry(context.bot, file_id)
+#         file_path = tg_file.file_path
+        
+#         print(f"[DEBUG] tg_file.file_path: {tg_file.file_path}")
+
+#         local_path = os.path.join(DOWNLOAD_DIR, file_name)
+
+#         print(f"[DEBUG] Waiting for file to be ready: {file_path}")
+
+#         if not wait_for_file_ready(file_path, file_size, timeout=900, interval=1):
+#             raise TimeoutError("File not ready after timeout")
+
+
+#         with open(file_path, 'rb') as src, open(local_path, 'wb') as dst:
+#             downloaded = 0
+#             while True:
+#                 chunk = src.read(8192)
+#                 if not chunk:
+#                     break
+#                 dst.write(chunk)
+#                 downloaded += len(chunk)
+#                 print(f"[DEBUG] Copied {downloaded} / {file_size} bytes", end='\r')
+
+#         print(f"[DEBUG] File copied to: {local_path}")
+
+#         os.remove(file_path)
+#         print(f"[DEBUG] Deleted original file from bot storage: {file_path}")
+
+#         # שליחת אישור למשתמש
+#         await update.message.reply_text(f"✅ File saved as {file_name} in the downloads folder!")
+#         await log_to_channel(context.application, f"📥 Downloaded file: {file_name} ({file_size} bytes)")
+
+#     except Exception as e:
+#         print(f"[ERROR] Failed to copy file: {e}")
+#         await update.message.reply_text("❌ Failed to save file.")
+#         await log_to_channel(context.application, f"❌ Error saving file: {e}")
+
 @authorized_only
 async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    document = update.message.document
-    file_id = document.file_id
-    file_name = document.file_name
-    file_size = document.file_size
-
-    print(f"[DEBUG] Received file: {file_name} ({file_size} bytes)")
-
-    try:
-        print("getting file...")
-        tg_file = await get_file_with_retry(context.bot, file_id)
-        file_path = tg_file.file_path
-        
-        print(f"[DEBUG] tg_file.file_path: {tg_file.file_path}")
-
-        local_path = os.path.join(DOWNLOAD_DIR, file_name)
-
-        print(f"[DEBUG] Waiting for file to be ready: {file_path}")
-
-        if not wait_for_file_ready(file_path, file_size, timeout=900, interval=1):
-            raise TimeoutError("File not ready after timeout")
-
-
-        with open(file_path, 'rb') as src, open(local_path, 'wb') as dst:
-            downloaded = 0
-            while True:
-                chunk = src.read(8192)
-                if not chunk:
-                    break
-                dst.write(chunk)
-                downloaded += len(chunk)
-                print(f"[DEBUG] Copied {downloaded} / {file_size} bytes", end='\r')
-
-        print(f"[DEBUG] File copied to: {local_path}")
-
-        os.remove(file_path)
-        print(f"[DEBUG] Deleted original file from bot storage: {file_path}")
-
-        # שליחת אישור למשתמש
-        await update.message.reply_text(f"✅ File saved as {file_name} in the downloads folder!")
-        await log_to_channel(context.application, f"📥 Downloaded file: {file_name} ({file_size} bytes)")
-
-    except Exception as e:
-        print(f"[ERROR] Failed to copy file: {e}")
-        await update.message.reply_text("❌ Failed to save file.")
-        await log_to_channel(context.application, f"❌ Error saving file: {e}")
+    tg_file = await context.bot.get_file()
+    print(f"[DEBUG] tg_file: {tg_file}")
 
 def main():
     app = Application.builder() \
