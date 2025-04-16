@@ -87,6 +87,7 @@ def main():
         .token(BOT_TOKEN) \
         .base_url("http://localhost:8081/bot") \
         .base_file_url("http://localhost:8081/file/bot") \
+        .get_updates_base_url("http://localhost:8081") \
         .local_mode(True) \
         .build()
 
