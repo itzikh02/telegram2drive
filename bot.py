@@ -89,7 +89,7 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     try:
         print("getting file...")
-        time.sleep(5)
+        time.sleep(20)
         tg_file = await context.bot.get_file(file_id)
         file_path = tg_file.file_path
         
