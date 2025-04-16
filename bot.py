@@ -98,6 +98,7 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     try:
         telegram_file = await context.bot.get_file(file_id)
+        print(f"Telegram file object: {telegram_file}")
         print("Telegram file object received.")
         print(f"Telegram file_path: {telegram_file.file_path}")
 
