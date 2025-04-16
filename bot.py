@@ -105,7 +105,7 @@ def main():
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("ping", ping))
-    app.add_handler(file_handler)
+    # app.add_handler(file_handler)
 
     print("✅ Bot is running with Local Bot API and logging to Telegram...")
     app.run_polling()
