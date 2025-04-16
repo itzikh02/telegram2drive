@@ -66,12 +66,12 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
     file_obj = None
     file_name = "unnamed"
 
-    # Detect file type and assign filename
+    # Detect file type
     if message.document:
         file_obj = message.document
         file_name = file_obj.file_name or "unnamed_document"
     elif message.photo:
-        file_obj = message.photo[-1]  # Highest quality photo
+        file_obj = message.photo[-1]
         file_name = f"photo_{file_obj.file_unique_id}.jpg"
     elif message.video:
         file_obj = message.video
@@ -94,45 +94,30 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
     print(f"Received file with ID: {file_id}")
     print(f"File name: {file_name}")
 
-    # Create downloads directory if needed
+    # Prepare path
     os.makedirs(DOWNLOAD_DIR, exist_ok=True)
-    local_save_path = os.path.join(DOWNLOAD_DIR, file_name)
+    local_path = os.path.join(DOWNLOAD_DIR, file_name)
 
     try:
         telegram_file = await context.bot.get_file(file_id)
         print("Telegram file object received.")
-        print(f"Raw file_path: {telegram_file.file_path}")
+        print(f"Telegram file_path: {telegram_file.file_path}")
 
-        # Fix file path if it is a full URL instead of relative path
-        if telegram_file.file_path.startswith("http://"):
-            print("⚠️ Detected full URL in file_path. Extracting relative path...")
-            parts = telegram_file.file_path.split("/file/")[-1].split("/", 1)
-            if len(parts) == 2:
-                file_path_relative = parts[1]
-                print(f"✅ Cleaned relative path: {file_path_relative}")
-            else:
-                print("❗ Unable to extract relative path from URL.")
-                return
-        else:
-            file_path_relative = telegram_file.file_path  # Already relative
+        # No manual URL parsing! Just download:
+        await telegram_file.download_to_drive(local_path)
+        print(f"✅ File downloaded to: {local_path}")
 
-        print(f"Raw file_path 2: {telegram_file.file_path}")
-
-        # Download the file using download_to_drive() for local file storage
-        await telegram_file.download_to_drive(local_save_path)
-        print(f"File downloaded to: {local_save_path}")
-
-        await message.reply_text(f"✅ The file has been successfully saved: {file_name}")
-        await log_to_channel(context.application, f"📥 File received and saved: {file_name}")
+        await message.reply_text(f"✅ The file has been saved: {file_name}")
+        await log_to_channel(context.application, f"📥 File saved: {file_name}")
     except Exception as e:
-        print(f"Error downloading file: {e}")
+        print(f"❌ Error downloading file: {e}")
         await message.reply_text("❌ Error downloading the file.")
 
 def main():
     app = Application.builder() \
         .token(BOT_TOKEN) \
         .base_url("http://localhost:8081/bot") \
-        .base_file_url("http://localhost:8081/file/") \
+        .base_file_url("http://localhost:8081/file/bot") \
         .local_mode(True) \
         .build()
 
