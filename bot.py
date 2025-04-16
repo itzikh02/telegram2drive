@@ -87,7 +87,12 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     try:
         tg_file = await context.bot.get_file(file_id)
-        file_path = tg_file.file_path
+        raw_path = tg_file.file_path
+        if "/data/" in raw_path:
+            relative_path = raw_path.split("/data/", 1)[-1]
+            file_path = os.path.join("/opt/telegram-bot-api/data", relative_path)
+        else:
+            raise Exception("Unexpected file_path format")
 
         local_path = os.path.join(DOWNLOAD_DIR, file_name)
 
