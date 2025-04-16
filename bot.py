@@ -87,6 +87,8 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     try:
         tg_file = await context.bot.get_file(file_id)
+        
+        print(f"[DEBUG] tg_file.file_path: {tg_file.file_path}")
         raw_path = tg_file.file_path
         if "/data/" in raw_path:
             relative_path = raw_path.split("/data/", 1)[-1]
