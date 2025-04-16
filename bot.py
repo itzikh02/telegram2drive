@@ -4,6 +4,9 @@ from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
 import logging
 
+import aiohttp
+import aiofiles
+
 # Load .env
 load_dotenv()
 
@@ -66,7 +69,6 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
     file_obj = None
     file_name = "unnamed"
 
-    # Detect file type
     if message.document:
         file_obj = message.document
         file_name = file_obj.file_name or "unnamed_document"
@@ -94,24 +96,42 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
     print(f"Received file with ID: {file_id}")
     print(f"File name: {file_name}")
 
-    # Prepare path
     os.makedirs(DOWNLOAD_DIR, exist_ok=True)
     local_path = os.path.join(DOWNLOAD_DIR, file_name)
 
     try:
         telegram_file = await context.bot.get_file(file_id)
         print("Telegram file object received.")
-        print(f"Telegram file_path: {telegram_file.file_path}")
 
-        # No manual URL parsing! Just download:
-        await telegram_file.download_to_drive(local_path)
-        print(f"✅ File downloaded to: {local_path}")
+        file_path = telegram_file.file_path
+        print(f"Telegram file_path: {file_path}")
 
-        await message.reply_text(f"✅ The file has been saved: {file_name}")
-        await log_to_channel(context.application, f"📥 File saved: {file_name}")
+        # Fix file_path if it's a full URL (Local Bot API returns absolute path sometimes)
+        if file_path.startswith("http://") or file_path.startswith("https://"):
+            print("⚠️ Detected full URL in file_path. Extracting relative path...")
+            relative_path = file_path.split("/data/", 1)[-1]
+            print(f"✅ Cleaned relative path: {relative_path}")
+            file_url = f"http://localhost:8081/file/{BOT_TOKEN}/{relative_path}"
+        else:
+            file_url = f"http://localhost:8081/file/{BOT_TOKEN}/{file_path}"
+
+        print(f"Download URL: {file_url}")
+
+        # Download using aiohttp
+        async with aiohttp.ClientSession() as session:
+            async with session.get(file_url) as resp:
+                if resp.status == 200:
+                    async with aiofiles.open(local_path, mode='wb') as f:
+                        await f.write(await resp.read())
+                    print(f"✅ File downloaded to: {local_path}")
+                    await message.reply_text(f"✅ File saved: {file_name}")
+                    await log_to_channel(context.application, f"📥 Received and saved: {file_name}")
+                else:
+                    raise Exception(f"Download failed with status {resp.status}")
+
     except Exception as e:
         print(f"❌ Error downloading file: {e}")
-        await message.reply_text("❌ Error downloading the file.")
+        await message.reply_text("❌ Error downloading file.")
 
 def main():
     app = Application.builder() \
