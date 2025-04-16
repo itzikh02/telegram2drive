@@ -97,7 +97,6 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     try:
         print("getting file...")
-        time.sleep(20)
         tg_file = await get_file_with_retry(context.bot, file_id)
         file_path = tg_file.file_path
         
