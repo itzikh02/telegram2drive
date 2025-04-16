@@ -100,6 +100,15 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     try:
         telegram_file = await context.bot.get_file(file_id)
+
+        file_path = telegram_file.file_path
+        print(f"Raw file_path: {file_path}")
+
+        # תיקון זמני אם הוא נתיב מלא:
+        if file_path.startswith("/"):
+            file_path = file_path.split("/opt/telegram-bot-api/data/")[-1]  # מחלץ את הנתיב היחסי
+            print(f"Fixed relative path: {file_path}")
+            
         print(f"Telegram file object received.")
         print(f"Telegram file path (API): {telegram_file.file_path}")
 
