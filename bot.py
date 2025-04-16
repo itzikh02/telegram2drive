@@ -52,13 +52,16 @@ def wait_for_file_ready(path, size, timeout=60, interval=1):
     start_time = time.time()
     last_size = -1
 
+    if not os.path.exists(path):
+        print(f"[DEBUG] File not found yet: {path}")
+
     while time.time() - start_time < timeout:
         if os.path.exists(path):
             current_size = os.path.getsize(path)
             if current_size == last_size:
                 return True
             last_size = current_size
-            # print(f"[DEBUG] Downloading {current_size} of {size}  bytes", end='\r')
+            print(f"[DEBUG] Downloading {current_size} of {size} bytes", end='\r')
         time.sleep(interval)
 
     return False  # Timeout
@@ -90,7 +93,7 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         print(f"[DEBUG] Waiting for file to be ready: {file_path}")
 
-        if not wait_for_file_ready(file_path, file_size, timeout=600, interval=5):
+        if not wait_for_file_ready(file_path, file_size, timeout=900, interval=1):
             raise TimeoutError("File not ready after timeout")
 
 
