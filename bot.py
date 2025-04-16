@@ -102,7 +102,7 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
         print(f"Local path: {local_path}")
 
         # הורדה באמצעות הספרייה – לא להתעסק עם file_path בכלל
-        await file.download_to_drive(custom_path=local_path)
+        await file.download_to_drive()
         print(f"✅ File downloaded to: {local_path}")
 
         await message.reply_text(f"✅ הקובץ נשמר בהצלחה: {file_name}")
