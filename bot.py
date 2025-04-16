@@ -106,16 +106,18 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Fix file path if it is a full URL instead of relative path
         if telegram_file.file_path.startswith("http://"):
             print("⚠️ Detected full URL in file_path. Extracting relative path...")
-            if "/file/" in telegram_file.file_path:
-                parts = telegram_file.file_path.split("/file/")[-1].split("/", 1)
-                if len(parts) == 2:
-                    telegram_file.file_path = parts[1]
-                    print(f"✅ Cleaned relative path: {telegram_file.file_path}")
+            parts = telegram_file.file_path.split("/file/")[-1].split("/", 1)
+            if len(parts) == 2:
+                file_path_relative = parts[1]
+                print(f"✅ Cleaned relative path: {file_path_relative}")
+            else:
+                print("❗ Unable to extract relative path from URL.")
+                return
+        else:
+            file_path_relative = telegram_file.file_path  # Already relative
 
-        print(f"Telegram file path (API): {telegram_file.file_path}")
-
-        # Download the file to the desired path
-        await telegram_file.download_to_drive(custom_path=local_save_path)
+        # Download the file using the relative path
+        await telegram_file.download(custom_path=local_save_path)
         print(f"File downloaded to: {local_save_path}")
 
         await message.reply_text(f"✅ הקובץ נשמר בהצלחה: {file_name}")
