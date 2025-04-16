@@ -86,11 +86,12 @@ def main():
     app = Application.builder() \
         .token(BOT_TOKEN) \
         .base_url("http://localhost:8081/bot") \
+        .base_file_url("http://localhost:8081/file/bot") \
+        .local_mode(True) \
         .build()
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("ping", ping))
-    app.add_handler(MessageHandler(filters.ALL, handle_file))
 
     print("✅ Bot is running with Local Bot API and logging to Telegram...")
     app.run_polling()
