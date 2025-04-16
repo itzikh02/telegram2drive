@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
-import logging
+import logging, time
 
 # Load .env
 load_dotenv()
@@ -45,6 +45,23 @@ def authorized_only(handler_func):
         return await handler_func(update, context)
     return wrapper
 
+import time
+
+def wait_for_file_ready(path, timeout=60, interval=1):
+    """Wait until file exists and size stops changing (download complete)."""
+    start_time = time.time()
+    last_size = -1
+
+    while time.time() - start_time < timeout:
+        if os.path.exists(path):
+            current_size = os.path.getsize(path)
+            if current_size == last_size:
+                return True
+            last_size = current_size
+        time.sleep(interval)
+
+    return False  # Timeout
+
 @authorized_only
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("👋 Welcome! Authorized access confirmed.")
@@ -69,6 +86,12 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
         file_path = tg_file.file_path
 
         local_path = os.path.join(DOWNLOAD_DIR, file_name)
+
+
+        print(f"[DEBUG] Waiting for file to be ready: {file_path}")
+        
+        if not wait_for_file_ready(file_path, timeout=60):
+            raise TimeoutError("File not ready after timeout")
 
         with open(file_path, 'rb') as src, open(local_path, 'wb') as dst:
             downloaded = 0
