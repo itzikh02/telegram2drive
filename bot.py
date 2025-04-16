@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
-import logging, requests
+import logging
 
 # Load .env
 load_dotenv()
@@ -56,6 +56,7 @@ async def ping(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await log_to_channel(context.application, f"📡 /ping by {update.effective_user.full_name} (ID: {update.effective_user.id})")
 
 @authorized_only
+@authorized_only
 async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
     document = update.message.document
     file_id = document.file_id
@@ -69,29 +70,38 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
         file_path = tg_file.file_path
         print(f"[DEBUG] Telegram file path: {file_path}")
 
-        # בנה את ה־URL לפי ה־Local Bot API
-        local_file_url = f"http://localhost:8081/file/bot{context.bot.token}/{file_path}"
-        print(f"[DEBUG] Downloading from: {local_file_url}")
+        # קובץ נמצא פיזית בתיקייה של הבוט
+        abs_path_on_disk = f"/opt/telegram-bot-api/data/{context.bot.token}/{file_path}"
+        print(f"[DEBUG] Reading file from disk: {abs_path_on_disk}")
 
-        response = requests.get(local_file_url, stream=True)
+        # יעד לשמירה בתיקיית ההורדות
         local_path = os.path.join(DOWNLOAD_DIR, file_name)
 
-        with open(local_path, 'wb') as f:
+        # העברת הקובץ לתיקיית ההורדות
+        with open(abs_path_on_disk, 'rb') as src, open(local_path, 'wb') as dst:
             downloaded = 0
-            for chunk in response.iter_content(chunk_size=8192):
-                if chunk:
-                    f.write(chunk)
-                    downloaded += len(chunk)
-                    print(f"[DEBUG] Downloaded {downloaded} / {file_size} bytes")
+            while True:
+                chunk = src.read(8192)
+                if not chunk:
+                    break
+                dst.write(chunk)
+                downloaded += len(chunk)
+                print(f"[DEBUG] Copied {downloaded} / {file_size} bytes")
 
-        print(f"[DEBUG] File saved to: {local_path}")
-        await update.message.reply_text(f"✅ File saved: {file_name}")
+        print(f"[DEBUG] File copied to: {local_path}")
+
+        # מחיקת הקובץ מהמיקום המקורי של הבוט
+        os.remove(abs_path_on_disk)
+        print(f"[DEBUG] Deleted original file from bot storage: {abs_path_on_disk}")
+
+        # שליחת אישור למשתמש
+        await update.message.reply_text(f"✅ File saved as {file_name} in the downloads folder!")
         await log_to_channel(context.application, f"📥 Downloaded file: {file_name} ({file_size} bytes)")
 
     except Exception as e:
-        print(f"[ERROR] Failed to download file: {e}")
-        await update.message.reply_text("❌ Failed to download file.")
-        await log_to_channel(context.application, f"❌ Error downloading file: {e}")
+        print(f"[ERROR] Failed to copy file: {e}")
+        await update.message.reply_text("❌ Failed to save file.")
+        await log_to_channel(context.application, f"❌ Error saving file: {e}")
 
 def main():
     app = Application.builder() \
