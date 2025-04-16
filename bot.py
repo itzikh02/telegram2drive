@@ -56,44 +56,30 @@ async def ping(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await log_to_channel(context.application, f"📡 /ping by {update.effective_user.full_name} (ID: {update.effective_user.id})")
 
 @authorized_only
-async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # בודק אם יש קובץ שנשלח (מסמך או תמונה)
-    file = update.message.document or update.message.photo[-1] if update.message.photo else None
-
+async def handle_file(update: Update, context):
+    file = update.message.document
     if file:
-        # קבלת אובייקט הקובץ המלא
-        telegram_file = await file.get_file()
-        # הדפסת ה־file_path
-        print(f"File path: {telegram_file.file_path}")
+        # Retrieve the file object from Telegram Bot API
+        telegram_file = await context.bot.get_file(file.file_id)
 
-        # שמירת הקובץ בתיקייה בפרויקט
-        file_path = telegram_file.file_path
-        download_url = f"http://localhost:8081/file/{BOT_TOKEN}/{file_path}"
+        # Determine the path to save the file locally
+        file_path = f"./downloads/{file.file_name}"
 
-        # הורדת הקובץ
-        print(f"Download URL: {download_url}")
-
-        # הגדרת שם הקובץ לשמירה בשרת
-        file_name = file_path.split("/")[-1]
-        local_path = os.path.join("downloads", file_name)
-
-        # הורדת הקובץ לשרת
         try:
-            await telegram_file.download_to_drive(local_path)
-            print(f"File downloaded successfully to {local_path}")
-
-            # שלח הודעה שההורדה הושלמה
-            await update.message.reply_text(f"✅ Download completed! File saved to: {local_path}")
-
+            # Download the file to the local system
+            await telegram_file.download(file_path)
+            await update.message.reply_text(f"File {file.file_name} has been downloaded successfully!")
         except Exception as e:
-            print(f"Failed to download file: {e}")
-            await update.message.reply_text(f"❌ Failed to download file. Error: {e}")
+            await update.message.reply_text(f"Failed to download the file. Error: {e}")
+            print(f"Error downloading file: {e}")
+        print(f"File path: {file_path}")
+
 
 def main():
     app = Application.builder() \
         .token(BOT_TOKEN) \
         .base_url("http://localhost:8081/bot") \
-        .base_file_url("http://localhost:8081/file/bot") \
+        .base_file_url("http://localhost:8081/file") \
         .local_mode(True) \
         .build()
 
