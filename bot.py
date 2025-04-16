@@ -58,9 +58,8 @@ async def ping(update: Update, context: ContextTypes.DEFAULT_TYPE):
 @authorized_only
 async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
     message = update.message
-
     if not message:
-        print("No message found in update.")
+        print("No message in update.")
         return
 
     file_obj = None
@@ -85,21 +84,33 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
         file_obj = message.animation
         file_name = file_obj.file_name or f"animation_{file_obj.file_unique_id}.mp4"
     else:
-        await message.reply_text("❗ Unsupported file type.")
+        await message.reply_text("❗ לא זיהיתי סוג קובץ נתמך.")
         print("Unsupported file type.")
         return
 
     file_id = file_obj.file_id
+    print(f"Received file with ID: {file_id}")
     print(f"File name: {file_name}")
 
-    file = await context.bot.get_file(file_id)
-    print(f"File object: {file}")
-
+    os.makedirs(DOWNLOAD_DIR, exist_ok=True)
     local_path = os.path.join(DOWNLOAD_DIR, file_name)
-    print(f"Local path: {local_path}")
 
-    await file.download_to_drive(custom_path=local_path)
-    print(f"✅ File downloaded to: {local_path}")
+    try:
+        # get_file יחזיר את אובייקט הקובץ עם כל הפרטים (כולל path, גודל וכו')
+        file = await context.bot.get_file(file_id)
+        print(f"File object: {file}")
+        print(f"Local path: {local_path}")
+
+        # הורדה באמצעות הספרייה – לא להתעסק עם file_path בכלל
+        await file.download_to_drive(custom_path=local_path)
+        print(f"✅ File downloaded to: {local_path}")
+
+        await message.reply_text(f"✅ הקובץ נשמר בהצלחה: {file_name}")
+        await log_to_channel(context.application, f"📥 קובץ התקבל ונשמר: {file_name}")
+
+    except Exception as e:
+        print(f"❌ Error downloading file: {e}")
+        await message.reply_text("❌ שגיאה בהורדת הקובץ.")
 
 def main():
     app = Application.builder() \
