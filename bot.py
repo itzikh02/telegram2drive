@@ -80,41 +80,16 @@ async def ping(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 @authorized_only
 async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    message = update.message
-    file_obj = None
-    file_name = "unnamed"
-    file_size = 0
-
-    if message.document:
-        file_obj = message.document
-        file_name = file_obj.file_name or "unnamed_document"
-    elif message.photo:
-        file_obj = message.photo[-1]
-        file_name = f"photo_{file_obj.file_unique_id}.jpg"
-    elif message.video:
-        file_obj = message.video
-        file_name = file_obj.file_name or f"video_{file_obj.file_unique_id}.mp4"
-    elif message.audio:
-        file_obj = message.audio
-        file_name = file_obj.file_name or f"audio_{file_obj.file_unique_id}.mp3"
-    elif message.voice:
-        file_obj = message.voice
-        file_name = f"voice_{file_obj.file_unique_id}.ogg"
-    elif message.animation:
-        file_obj = message.animation
-        file_name = file_obj.file_name or f"animation_{file_obj.file_unique_id}.mp4"
-    else:
-        await message.reply_text("❗ לא זיהיתי סוג קובץ נתמך.")
-        print("Unsupported file type.")
-        return
-
-    file_id = file_obj.file_id
-    file_size = file_obj.file_size or 0
+    document = update.message.document
+    file_id = document.file_id
+    file_name = document.file_name
+    file_size = document.file_size
 
     print(f"[DEBUG] Received file: {file_name} ({file_size} bytes)")
 
     try:
         print("getting file...")
+        time.sleep(5)
         tg_file = await context.bot.get_file(file_id)
         file_path = tg_file.file_path
         
@@ -126,6 +101,7 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         if not wait_for_file_ready(file_path, file_size, timeout=900, interval=1):
             raise TimeoutError("File not ready after timeout")
+
 
         with open(file_path, 'rb') as src, open(local_path, 'wb') as dst:
             downloaded = 0
