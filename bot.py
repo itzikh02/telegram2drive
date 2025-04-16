@@ -88,7 +88,7 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
     print(f"[DEBUG] Received file: {file_name} ({file_size} bytes)")
 
     try:
-        tg_file = await context.bot.get_file(file_id)
+        tg_file = await context.bot.get_file(file_id, timeout=900)
         file_path = tg_file.file_path
         print("Test")
         print(f"[DEBUG] tg_file.file_path: {tg_file.file_path}")
