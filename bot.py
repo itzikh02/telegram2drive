@@ -90,7 +90,7 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         print(f"[DEBUG] Waiting for file to be ready: {file_path}")
         
-        if not wait_for_file_ready(file_path, file_size, timeout=600, interval=3):
+        if not wait_for_file_ready(file_path, file_size, timeout=600, interval=5):
             raise TimeoutError("File not ready after timeout")
 
 
