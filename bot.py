@@ -70,7 +70,8 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
         print(f"[DEBUG] Telegram file path: {file_path}")
 
         # קובץ נמצא פיזית בתיקייה של הבוט
-        abs_path_on_disk = f"/opt/telegram-bot-api/data/{context.bot.token}/{file_path}"
+        # abs_path_on_disk = f"/opt/telegram-bot-api/data/{context.bot.token}/{file_path}"
+        abs_path_on_disk = file_path
         print(f"[DEBUG] Reading file from disk: {abs_path_on_disk}")
 
         # יעד לשמירה בתיקיית ההורדות
