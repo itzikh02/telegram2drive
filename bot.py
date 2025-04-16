@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
-import logging, time
+import logging, time, asyncio
 
 # Load .env
 load_dotenv()
@@ -45,7 +45,15 @@ def authorized_only(handler_func):
         return await handler_func(update, context)
     return wrapper
 
-import time
+async def get_file_with_retry(bot, file_id, retries=5, delay=3):
+    for attempt in range(retries):
+        try:
+            return await bot.get_file(file_id)
+        except Exception as e:
+            print(f"[DEBUG] Attempt {attempt + 1} failed: {e}")
+            await asyncio.sleep(delay)
+    raise TimeoutError("File retrieval failed after retries")
+
 
 def wait_for_file_ready(path, size, timeout=60, interval=1):
     """Wait until file exists and size stops changing (download complete)."""
@@ -90,7 +98,7 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         print("getting file...")
         time.sleep(20)
-        tg_file = await context.bot.get_file(file_id)
+        tg_file = await get_file_with_retry(context.bot, file_id)
         file_path = tg_file.file_path
         
         print(f"[DEBUG] tg_file.file_path: {tg_file.file_path}")
