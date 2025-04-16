@@ -66,11 +66,12 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
     file_obj = None
     file_name = "unnamed"
 
+    # Detect file type and assign filename
     if message.document:
         file_obj = message.document
         file_name = file_obj.file_name or "unnamed_document"
     elif message.photo:
-        file_obj = message.photo[-1]  # הכי איכותי
+        file_obj = message.photo[-1]  # Highest quality photo
         file_name = f"photo_{file_obj.file_unique_id}.jpg"
     elif message.video:
         file_obj = message.video
@@ -89,31 +90,33 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
         print("Unsupported file type.")
         return
 
-    # קובץ מזהה
     file_id = file_obj.file_id
     print(f"Received file with ID: {file_id}")
     print(f"File name: {file_name}")
 
-    # תיקייה
+    # Create downloads directory if needed
     os.makedirs(DOWNLOAD_DIR, exist_ok=True)
-    file_path = os.path.join(DOWNLOAD_DIR, file_name)
+    local_save_path = os.path.join(DOWNLOAD_DIR, file_name)
 
     try:
         telegram_file = await context.bot.get_file(file_id)
+        print("Telegram file object received.")
+        print(f"Raw file_path: {telegram_file.file_path}")
 
-        file_path = telegram_file.file_path
-        print(f"Raw file_path: {file_path}")
+        # Fix file path if it is a full URL instead of relative path
+        if telegram_file.file_path.startswith("http://"):
+            print("⚠️ Detected full URL in file_path. Extracting relative path...")
+            if "/file/" in telegram_file.file_path:
+                parts = telegram_file.file_path.split("/file/")[-1].split("/", 1)
+                if len(parts) == 2:
+                    telegram_file.file_path = parts[1]
+                    print(f"✅ Cleaned relative path: {telegram_file.file_path}")
 
-        # תיקון זמני אם הוא נתיב מלא:
-        if file_path.startswith("/"):
-            file_path = file_path.split("/opt/telegram-bot-api/data/")[-1]  # מחלץ את הנתיב היחסי
-            print(f"Fixed relative path: {file_path}")
-            
-        print(f"Telegram file object received.")
         print(f"Telegram file path (API): {telegram_file.file_path}")
 
-        await telegram_file.download_to_drive(file_path)
-        print(f"File downloaded to: {file_path}")
+        # Download the file to the desired path
+        await telegram_file.download_to_drive(custom_path=local_save_path)
+        print(f"File downloaded to: {local_save_path}")
 
         await message.reply_text(f"✅ הקובץ נשמר בהצלחה: {file_name}")
         await log_to_channel(context.application, f"📥 קובץ התקבל ונשמר: {file_name}")
