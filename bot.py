@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 from telegram import Update
-from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes
+from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
 import logging
 
 # Load .env
@@ -57,32 +57,37 @@ async def ping(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 @authorized_only
 async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    message = update.message
+    # בודק אם יש קובץ שנשלח (מסמך או תמונה)
+    file = update.message.document or update.message.photo[-1] if update.message.photo else None
 
-    # ודא שיצרנו את התיקייה
-    os.makedirs(DOWNLOAD_DIR, exist_ok=True)
+    if file:
+        # קבלת אובייקט הקובץ המלא
+        telegram_file = await file.get_file()
+        # הדפסת ה־file_path
+        print(f"File path: {telegram_file.file_path}")
 
-    # קבל את הקובץ מכל סוג שהוא
-    file = message.effective_attachment
-    if not file:
-        await message.reply_text("❌ לא הצלחתי לזהות קובץ.")
-        return
-    
-    print(f"path: {file.file_path}")
+        # שמירת הקובץ בתיקייה בפרויקט
+        file_path = telegram_file.file_path
+        download_url = f"http://localhost:8081/file/{BOT_TOKEN}/{file_path}"
 
-    telegram_file = await file.get_file()
-    original_filename = getattr(file, "file_name", f"{file.file_id}.bin")
-    file_path = os.path.join(DOWNLOAD_DIR, original_filename)
+        # הורדת הקובץ
+        print(f"Download URL: {download_url}")
 
-    await message.reply_text(f"⬇️ מוריד את הקובץ: {original_filename}")
-    await telegram_file.download_to_drive(file_path)
-    await message.reply_text(f"✅ הקובץ נשמר בהצלחה: {original_filename}")
+        # הגדרת שם הקובץ לשמירה בשרת
+        file_name = file_path.split("/")[-1]
+        local_path = os.path.join("downloads", file_name)
 
-    # שלח ללוג
-    await log_to_channel(
-        context.application,
-        f"📥 {message.from_user.full_name} שלח קובץ ונשמר בשם: {original_filename}"
-    )
+        # הורדת הקובץ לשרת
+        try:
+            await telegram_file.download_to_drive(local_path)
+            print(f"File downloaded successfully to {local_path}")
+
+            # שלח הודעה שההורדה הושלמה
+            await update.message.reply_text(f"✅ Download completed! File saved to: {local_path}")
+
+        except Exception as e:
+            print(f"Failed to download file: {e}")
+            await update.message.reply_text(f"❌ Failed to download file. Error: {e}")
 
 def main():
     app = Application.builder() \
@@ -92,9 +97,11 @@ def main():
         .local_mode(True) \
         .build()
 
+    file_handler = MessageHandler(filters.ALL, handle_file)
+
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("ping", ping))
-    app.add_handler(MessageHandler(None, handle_file))
+    app.add_handler(file_handler)
 
     print("✅ Bot is running with Local Bot API and logging to Telegram...")
     app.run_polling()
