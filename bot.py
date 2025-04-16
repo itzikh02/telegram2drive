@@ -117,7 +117,7 @@ def main():
     app = Application.builder() \
         .token(BOT_TOKEN) \
         .base_url("http://localhost:8081/bot") \
-        .base_file_url("http://localhost:8081/file/bot") \
+        .base_file_url("http://localhost:8081/file/bot/") \
         .local_mode(True) \
         .build()
 
