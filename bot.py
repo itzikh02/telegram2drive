@@ -67,6 +67,8 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not file:
         await message.reply_text("❌ לא הצלחתי לזהות קובץ.")
         return
+    
+    print(f"path: {file.file_path}")
 
     telegram_file = await file.get_file()
     original_filename = getattr(file, "file_name", f"{file.file_id}.bin")
