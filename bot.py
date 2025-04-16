@@ -63,6 +63,7 @@ def wait_for_file_ready(path, size, timeout=60, interval=1):
             if current_size == last_size:
                 return True
             last_size = current_size
+            print(f"[DEBUG] File size: {current_size} / {size} bytes", end='\r')
         time.sleep(interval)
 
     return False  # Timeout
