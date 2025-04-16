@@ -90,30 +90,16 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     file_id = file_obj.file_id
-    print(f"Received file with ID: {file_id}")
     print(f"File name: {file_name}")
 
-    os.makedirs(DOWNLOAD_DIR, exist_ok=True)
+    file = await context.bot.get_file(file_id)
+    print(f"File object: {file}")
+
     local_path = os.path.join(DOWNLOAD_DIR, file_name)
+    print(f"Local path: {local_path}")
 
-    try:
-        telegram_file = await context.bot.get_file(file_id)
-        print(f"Telegram file object: {telegram_file}")
-        print("Telegram file object received.")
-        print(f"Telegram file_path: {telegram_file.file_path}")
-
-        # Make sure we're not trying to modify file_path – it’s a read-only attribute
-
-        # Use the download_to_drive method, which handles everything under the hood
-        await telegram_file.download_to_drive(custom_path=local_path)
-        print(f"✅ File downloaded to: {local_path}")
-
-        await message.reply_text(f"✅ File saved: {file_name}")
-        await log_to_channel(context.application, f"📥 Received and saved: {file_name}")
-
-    except Exception as e:
-        print(f"❌ Error downloading file: {e}")
-        await message.reply_text("❌ Error downloading file.")
+    await file.download_to_drive(custom_path=local_path)
+    print(f"✅ File downloaded to: {local_path}")
 
 def main():
     app = Application.builder() \
