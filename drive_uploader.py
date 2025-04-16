@@ -23,14 +23,14 @@ def get_drive_service():
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
-            flow = InstalledAppFlow.from_client_secrets_file('credentials.json', SCOPES)
+            flow = InstalledAppFlow.from_client_secrets_file('credentials.json', SCOPES, redirect_uri='http://localhost:8080/')
             auth_url, _ = flow.authorization_url(prompt='consent')
-            
+
             print("🔗 Please go to this URL and authorize access:")
             print(auth_url)
-            
+
             code = input("📥 Paste the authorization code here: ")
-            
+
             flow.fetch_token(code=code)
             creds = flow.credentials
         with open('token.pickle', 'wb') as token:
