@@ -126,7 +126,6 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
         print(f"Error downloading file: {e}")
         await message.reply_text("❌ שגיאה בהורדת הקובץ.")
 
-
 def main():
     app = Application.builder() \
         .token(BOT_TOKEN) \
