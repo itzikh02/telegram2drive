@@ -2,6 +2,7 @@ import os
 from dotenv import load_dotenv
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
+from drive_uploader import upload_file_to_drive
 import logging, time, asyncio
 
 # Load .env
@@ -128,6 +129,9 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # שליחת אישור למשתמש
         await update.message.reply_text(f"✅ File saved as {file_name} in the downloads folder!")
         await log_to_channel(context.application, f"📥 Downloaded file: {file_name} ({file_size} bytes)")
+
+        drive_file_id = upload_file_to_drive(local_path, file_name, folder_id="1nBEoFMF7VDzewTBuq1Pta8h2AR0vjZN3")
+        await update.message.reply_text(f"📤 העלאה ל-Drive הושלמה! קובץ ID: {drive_file_id}")
 
     except Exception as e:
         print(f"[ERROR] Failed to copy file: {e}")
