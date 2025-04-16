@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 from telegram import Update
-from telegram.ext import Application, CommandHandler, ContextTypes
+from telegram.ext import Application, CommandHandler, MessageHandler
 import logging
 
 # Load .env
@@ -92,6 +92,7 @@ def main():
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("ping", ping))
+    app.add_handler(MessageHandler(None, handle_file))
 
     print("✅ Bot is running with Local Bot API and logging to Telegram...")
     app.run_polling()
