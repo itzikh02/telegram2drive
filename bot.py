@@ -81,6 +81,11 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     print(f"[DEBUG] Received file: {file_name} ({file_size} bytes)")
 
+    print(f"[DEBUG] Waiting for file to be ready: {file_path}")
+        
+    if not wait_for_file_ready(file_path, timeout=60):
+        raise TimeoutError("File not ready after timeout")
+
     try:
         tg_file = await context.bot.get_file(file_id)
         file_path = tg_file.file_path
@@ -88,10 +93,7 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
         local_path = os.path.join(DOWNLOAD_DIR, file_name)
 
 
-        print(f"[DEBUG] Waiting for file to be ready: {file_path}")
-        
-        if not wait_for_file_ready(file_path, timeout=60):
-            raise TimeoutError("File not ready after timeout")
+
 
         with open(file_path, 'rb') as src, open(local_path, 'wb') as dst:
             downloaded = 0
