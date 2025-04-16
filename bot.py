@@ -58,36 +58,59 @@ async def ping(update: Update, context: ContextTypes.DEFAULT_TYPE):
 @authorized_only
 async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
     message = update.message
-    file_name = None
-    file_id = None
 
-    # תופס כל סוג של קובץ שנשלח
-    if message.document:
-        file_id = message.document.file_id
-        file_name = message.document.file_name
-    elif message.photo:
-        file_id = message.photo[-1].file_id  # מקבל את התמונה הכי באיכות
-        file_name = f"photo_{file_id}.jpg"
-    elif message.video:
-        file_id = message.video.file_id
-        file_name = message.video.file_name or f"video_{file_id}.mp4"
-    else:
-        await message.reply_text("❗ לא זוהה קובץ נתמך להורדה.")
+    if not message:
+        print("No message found in update.")
         return
 
-    # וידוא שהספרייה קיימת
+    file_obj = None
+    file_name = "unnamed"
+
+    if message.document:
+        file_obj = message.document
+        file_name = file_obj.file_name or "unnamed_document"
+    elif message.photo:
+        file_obj = message.photo[-1]  # הכי איכותי
+        file_name = f"photo_{file_obj.file_unique_id}.jpg"
+    elif message.video:
+        file_obj = message.video
+        file_name = file_obj.file_name or f"video_{file_obj.file_unique_id}.mp4"
+    elif message.audio:
+        file_obj = message.audio
+        file_name = file_obj.file_name or f"audio_{file_obj.file_unique_id}.mp3"
+    elif message.voice:
+        file_obj = message.voice
+        file_name = f"voice_{file_obj.file_unique_id}.ogg"
+    elif message.animation:
+        file_obj = message.animation
+        file_name = file_obj.file_name or f"animation_{file_obj.file_unique_id}.mp4"
+    else:
+        await message.reply_text("❗ לא זיהיתי סוג קובץ נתמך.")
+        print("Unsupported file type.")
+        return
+
+    # קובץ מזהה
+    file_id = file_obj.file_id
+    print(f"Received file with ID: {file_id}")
+    print(f"File name: {file_name}")
+
+    # תיקייה
     os.makedirs(DOWNLOAD_DIR, exist_ok=True)
     file_path = os.path.join(DOWNLOAD_DIR, file_name)
 
     try:
         telegram_file = await context.bot.get_file(file_id)
-        await telegram_file.download_to_drive(file_path)
+        print(f"Telegram file object received.")
+        print(f"Telegram file path (API): {telegram_file.file_path}")
 
-        await message.reply_text(f"✅ הקובץ '{file_name}' ירד בהצלחה.")
-        print(f"Downloaded to: {file_path}")
+        await telegram_file.download_to_drive(file_path)
+        print(f"File downloaded to: {file_path}")
+
+        await message.reply_text(f"✅ הקובץ נשמר בהצלחה: {file_name}")
+        await log_to_channel(context.application, f"📥 קובץ התקבל ונשמר: {file_name}")
     except Exception as e:
-        await message.reply_text("❌ שגיאה בהורדת הקובץ.")
         print(f"Error downloading file: {e}")
+        await message.reply_text("❌ שגיאה בהורדת הקובץ.")
 
 
 def main():
