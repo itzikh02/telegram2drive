@@ -52,6 +52,8 @@ def wait_for_file_ready(path, size, timeout=60, interval=1):
     start_time = time.time()
     last_size = -1
 
+    time.sleep(2)  # Initial wait to allow file creation
+
     if not os.path.exists(path):
         print(f"[DEBUG] File not found yet: {path}")
 
@@ -61,7 +63,6 @@ def wait_for_file_ready(path, size, timeout=60, interval=1):
             if current_size == last_size:
                 return True
             last_size = current_size
-            print(f"[DEBUG] Downloading {current_size} of {size} bytes", end='\r')
         time.sleep(interval)
 
     return False  # Timeout
@@ -87,20 +88,15 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     try:
         tg_file = await context.bot.get_file(file_id)
-        
+        file_path = tg_file.file_path
+        print("Test")
         print(f"[DEBUG] tg_file.file_path: {tg_file.file_path}")
-        raw_path = tg_file.file_path
-        if "/data/" in raw_path:
-            relative_path = raw_path.split("/data/", 1)[-1]
-            file_path = os.path.join("/opt/telegram-bot-api/data", relative_path)
-        else:
-            raise Exception("Unexpected file_path format")
 
         local_path = os.path.join(DOWNLOAD_DIR, file_name)
 
         print(f"[DEBUG] Waiting for file to be ready: {file_path}")
 
-        if not wait_for_file_ready(file_path, file_size, timeout=900, interval=1):
+        if not wait_for_file_ready(file_path, file_size, timeout=900, interval=3):
             raise TimeoutError("File not ready after timeout")
 
 
