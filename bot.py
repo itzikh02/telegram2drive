@@ -136,7 +136,8 @@ async def ping(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 @authorized_only
 async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    tg_file = await context.bot.get_file()
+    print("[DEBUG] update: {update}")
+    tg_file = await context.bot.get_file(file_id)
     print(f"[DEBUG] tg_file: {tg_file}")
 
 def main():
