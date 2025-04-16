@@ -67,18 +67,10 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         tg_file = await context.bot.get_file(file_id)
         file_path = tg_file.file_path
-        print(f"[DEBUG] Telegram file path: {file_path}")
 
-        # קובץ נמצא פיזית בתיקייה של הבוט
-        # abs_path_on_disk = f"/opt/telegram-bot-api/data/{context.bot.token}/{file_path}"
-        abs_path_on_disk = file_path
-        print(f"[DEBUG] Reading file from disk: {abs_path_on_disk}")
-
-        # יעד לשמירה בתיקיית ההורדות
         local_path = os.path.join(DOWNLOAD_DIR, file_name)
 
-        # העברת הקובץ לתיקיית ההורדות
-        with open(abs_path_on_disk, 'rb') as src, open(local_path, 'wb') as dst:
+        with open(file_path, 'rb') as src, open(local_path, 'wb') as dst:
             downloaded = 0
             while True:
                 chunk = src.read(8192)
@@ -86,13 +78,12 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     break
                 dst.write(chunk)
                 downloaded += len(chunk)
-                print(f"[DEBUG] Copied {downloaded} / {file_size} bytes")
+                print(f"[DEBUG] Copied {downloaded} / {file_size} bytes", end='\r')
 
         print(f"[DEBUG] File copied to: {local_path}")
 
-        # מחיקת הקובץ מהמיקום המקורי של הבוט
-        os.remove(abs_path_on_disk)
-        print(f"[DEBUG] Deleted original file from bot storage: {abs_path_on_disk}")
+        os.remove(file_path)
+        print(f"[DEBUG] Deleted original file from bot storage: {file_path}")
 
         # שליחת אישור למשתמש
         await update.message.reply_text(f"✅ File saved as {file_name} in the downloads folder!")
