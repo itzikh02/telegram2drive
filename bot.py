@@ -86,7 +86,7 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
         file_obj = message.animation
         file_name = file_obj.file_name or f"animation_{file_obj.file_unique_id}.mp4"
     else:
-        await message.reply_text("❗ לא זיהיתי סוג קובץ נתמך.")
+        await message.reply_text("❗ Unsupported file type.")
         print("Unsupported file type.")
         return
 
@@ -116,15 +116,15 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
         else:
             file_path_relative = telegram_file.file_path  # Already relative
 
-        # Download the file using the relative path
-        await telegram_file.download(custom_path=local_save_path)
+        # Download the file using download_to_drive() for local file storage
+        await telegram_file.download_to_drive(local_save_path)
         print(f"File downloaded to: {local_save_path}")
 
-        await message.reply_text(f"✅ הקובץ נשמר בהצלחה: {file_name}")
-        await log_to_channel(context.application, f"📥 קובץ התקבל ונשמר: {file_name}")
+        await message.reply_text(f"✅ The file has been successfully saved: {file_name}")
+        await log_to_channel(context.application, f"📥 File received and saved: {file_name}")
     except Exception as e:
         print(f"Error downloading file: {e}")
-        await message.reply_text("❌ שגיאה בהורדת הקובץ.")
+        await message.reply_text("❌ Error downloading the file.")
 
 def main():
     app = Application.builder() \
