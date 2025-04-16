@@ -47,7 +47,7 @@ def authorized_only(handler_func):
 
 import time
 
-def wait_for_file_ready(path, timeout=60, interval=1):
+def wait_for_file_ready(path, size, timeout=60, interval=1):
     """Wait until file exists and size stops changing (download complete)."""
     start_time = time.time()
     last_size = -1
@@ -58,6 +58,7 @@ def wait_for_file_ready(path, timeout=60, interval=1):
             if current_size == last_size:
                 return True
             last_size = current_size
+            print(f"[DEBUG] Downloading {current_size} of {size}  bytes", end='\r')
         time.sleep(interval)
 
     return False  # Timeout
@@ -89,7 +90,7 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         print(f"[DEBUG] Waiting for file to be ready: {file_path}")
         
-        if not wait_for_file_ready(file_path, timeout=600, interval=5):
+        if not wait_for_file_ready(file_path, file_size, timeout=600, interval=3):
             raise TimeoutError("File not ready after timeout")
 
 
