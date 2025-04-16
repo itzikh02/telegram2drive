@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
-from telegram import Update, File
-from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
+from telegram import Update
+from telegram.ext import Application, CommandHandler, ContextTypes
 import logging
 
 # Load .env
@@ -58,28 +58,29 @@ async def ping(update: Update, context: ContextTypes.DEFAULT_TYPE):
 @authorized_only
 async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
     message = update.message
-    if not message:
+
+    # ודא שיצרנו את התיקייה
+    os.makedirs(DOWNLOAD_DIR, exist_ok=True)
+
+    # קבל את הקובץ מכל סוג שהוא
+    file = message.effective_attachment
+    if not file:
+        await message.reply_text("❌ לא הצלחתי לזהות קובץ.")
         return
 
-    document = message.document or message.video or message.audio or message.voice or message.photo
-    if not document:
-        await message.reply_text("❗ לא זוהה קובץ להורדה.")
-        return
+    telegram_file = await file.get_file()
+    original_filename = getattr(file, "file_name", f"{file.file_id}.bin")
+    file_path = os.path.join(DOWNLOAD_DIR, original_filename)
 
-    # קביעת שם קובץ
-    if isinstance(document, list):  # תמונות מגיעות כרשימה
-        document = document[-1]
-        file_name = f"{document.file_unique_id}.jpg"
-    else:
-        file_name = getattr(document, 'file_name', f"{document.file_unique_id}")
-
-    telegram_file: File = await context.bot.get_file(document.file_id)
-    file_path = os.path.join(DOWNLOAD_DIR, file_name)
-
-    await message.reply_text("⏬ מתחיל להוריד...")
+    await message.reply_text(f"⬇️ מוריד את הקובץ: {original_filename}")
     await telegram_file.download_to_drive(file_path)
-    await message.reply_text(f"✅ הקובץ נשמר: `{file_name}`", parse_mode="Markdown")
-    await log_to_channel(context.application, f"📥 הורד קובץ: `{file_name}`")
+    await message.reply_text(f"✅ הקובץ נשמר בהצלחה: {original_filename}")
+
+    # שלח ללוג
+    await log_to_channel(
+        context.application,
+        f"📥 {message.from_user.full_name} שלח קובץ ונשמר בשם: {original_filename}"
+    )
 
 def main():
     app = Application.builder() \
