@@ -58,31 +58,28 @@ async def ping(update: Update, context: ContextTypes.DEFAULT_TYPE):
 @authorized_only
 async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
     message = update.message
-    tg_file = None
-    file_name = None
-
-    if message.document:
-        tg_file = message.document
-        file_name = tg_file.file_name
-    elif message.video:
-        tg_file = message.video
-        file_name = f"{tg_file.file_unique_id}.mp4"
-    elif message.photo:
-        tg_file = message.photo[-1]
-        file_name = f"{tg_file.file_unique_id}.jpg"
-    else:
-        await message.reply_text("❗ Please send a document, video, or photo.")
+    if not message:
         return
 
-    telegram_file: File = await context.bot.get_file(tg_file.file_id)
+    document = message.document or message.video or message.audio or message.voice or message.photo
+    if not document:
+        await message.reply_text("❗ לא זוהה קובץ להורדה.")
+        return
+
+    # קביעת שם קובץ
+    if isinstance(document, list):  # תמונות מגיעות כרשימה
+        document = document[-1]
+        file_name = f"{document.file_unique_id}.jpg"
+    else:
+        file_name = getattr(document, 'file_name', f"{document.file_unique_id}")
+
+    telegram_file: File = await context.bot.get_file(document.file_id)
     file_path = os.path.join(DOWNLOAD_DIR, file_name)
 
-    await message.reply_text("⏬ Download started...")
-
+    await message.reply_text("⏬ מתחיל להוריד...")
     await telegram_file.download_to_drive(file_path)
-
-    await message.reply_text(f"✅ Download complete: `{file_name}`", parse_mode="Markdown")
-    await log_to_channel(context.application, f"📥 File downloaded: `{file_name}`")
+    await message.reply_text(f"✅ הקובץ נשמר: `{file_name}`", parse_mode="Markdown")
+    await log_to_channel(context.application, f"📥 הורד קובץ: `{file_name}`")
 
 def main():
     app = Application.builder() \
@@ -92,7 +89,7 @@ def main():
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("ping", ping))
-    app.add_handler(MessageHandler(filters.Document.ALL | filters.Video.ALL | filters.PHOTO, handle_file))
+    app.add_handler(MessageHandler(filters.ALL, handle_file))
 
     print("✅ Bot is running with Local Bot API and logging to Telegram...")
     app.run_polling()
