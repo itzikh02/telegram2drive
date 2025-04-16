@@ -116,6 +116,8 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
         else:
             file_path_relative = telegram_file.file_path  # Already relative
 
+        print(f"Raw file_path 2: {telegram_file.file_path}")
+
         # Download the file using download_to_drive() for local file storage
         await telegram_file.download_to_drive(local_save_path)
         print(f"File downloaded to: {local_save_path}")
