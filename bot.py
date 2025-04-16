@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
-import logging
+import logging, requests
 
 # Load .env
 load_dotenv()
@@ -57,60 +57,41 @@ async def ping(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 @authorized_only
 async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    message = update.message
-    if not message:
-        print("No message in update.")
-        return
+    document = update.message.document
+    file_id = document.file_id
+    file_name = document.file_name
+    file_size = document.file_size
 
-    file_obj = None
-    file_name = "unnamed"
-
-    if message.document:
-        file_obj = message.document
-        file_name = file_obj.file_name or "unnamed_document"
-    elif message.photo:
-        file_obj = message.photo[-1]
-        file_name = f"photo_{file_obj.file_unique_id}.jpg"
-    elif message.video:
-        file_obj = message.video
-        file_name = file_obj.file_name or f"video_{file_obj.file_unique_id}.mp4"
-    elif message.audio:
-        file_obj = message.audio
-        file_name = file_obj.file_name or f"audio_{file_obj.file_unique_id}.mp3"
-    elif message.voice:
-        file_obj = message.voice
-        file_name = f"voice_{file_obj.file_unique_id}.ogg"
-    elif message.animation:
-        file_obj = message.animation
-        file_name = file_obj.file_name or f"animation_{file_obj.file_unique_id}.mp4"
-    else:
-        await message.reply_text("❗ לא זיהיתי סוג קובץ נתמך.")
-        print("Unsupported file type.")
-        return
-
-    file_id = file_obj.file_id
-    print(f"Received file with ID: {file_id}")
-    print(f"File name: {file_name}")
-
-    os.makedirs(DOWNLOAD_DIR, exist_ok=True)
-    local_path = os.path.join(DOWNLOAD_DIR, file_name)
+    print(f"[DEBUG] Received file: {file_name} ({file_size} bytes)")
 
     try:
-        # get_file יחזיר את אובייקט הקובץ עם כל הפרטים (כולל path, גודל וכו')
-        file = await context.bot.get_file(file_id)
-        print(f"File object: {file}")
-        print(f"Local path: {local_path}")
+        tg_file = await context.bot.get_file(file_id)
+        file_path = tg_file.file_path
+        print(f"[DEBUG] Telegram file path: {file_path}")
 
-        # הורדה באמצעות הספרייה – לא להתעסק עם file_path בכלל
-        await file.download_to_drive()
-        print(f"✅ File downloaded to: {local_path}")
+        # בנה את ה־URL לפי ה־Local Bot API
+        local_file_url = f"http://localhost:8081/file/bot{context.bot.token}/{file_path}"
+        print(f"[DEBUG] Downloading from: {local_file_url}")
 
-        await message.reply_text(f"✅ הקובץ נשמר בהצלחה: {file_name}")
-        await log_to_channel(context.application, f"📥 קובץ התקבל ונשמר: {file_name}")
+        response = requests.get(local_file_url, stream=True)
+        local_path = os.path.join(DOWNLOAD_DIR, file_name)
+
+        with open(local_path, 'wb') as f:
+            downloaded = 0
+            for chunk in response.iter_content(chunk_size=8192):
+                if chunk:
+                    f.write(chunk)
+                    downloaded += len(chunk)
+                    print(f"[DEBUG] Downloaded {downloaded} / {file_size} bytes")
+
+        print(f"[DEBUG] File saved to: {local_path}")
+        await update.message.reply_text(f"✅ File saved: {file_name}")
+        await log_to_channel(context.application, f"📥 Downloaded file: {file_name} ({file_size} bytes)")
 
     except Exception as e:
-        print(f"❌ Error downloading file: {e}")
-        await message.reply_text("❌ שגיאה בהורדת הקובץ.")
+        print(f"[ERROR] Failed to download file: {e}")
+        await update.message.reply_text("❌ Failed to download file.")
+        await log_to_channel(context.application, f"❌ Error downloading file: {e}")
 
 def main():
     app = Application.builder() \
