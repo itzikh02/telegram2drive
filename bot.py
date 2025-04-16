@@ -56,7 +56,6 @@ async def ping(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await log_to_channel(context.application, f"📡 /ping by {update.effective_user.full_name} (ID: {update.effective_user.id})")
 
 @authorized_only
-@authorized_only
 async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
     document = update.message.document
     file_id = document.file_id
