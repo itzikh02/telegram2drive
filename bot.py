@@ -52,7 +52,7 @@ def wait_for_file_ready(path, size, timeout=60, interval=1):
     start_time = time.time()
     last_size = -1
 
-    # time.sleep(2)
+    time.sleep(2)
 
     if not os.path.exists(path):
         print(f"[DEBUG] File not found yet: {path}")
