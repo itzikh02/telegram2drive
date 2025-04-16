@@ -81,7 +81,7 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     print(f"[DEBUG] Received file: {file_name} ({file_size} bytes)")
 
-    print(f"[DEBUG] Waiting for file to be ready: {file_path}")
+    print(f"[DEBUG] Waiting for file to be ready: {tg_file.file_path}")
         
     if not wait_for_file_ready(file_path, timeout=60):
         raise TimeoutError("File not ready after timeout")
