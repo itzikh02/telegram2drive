@@ -56,23 +56,38 @@ async def ping(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await log_to_channel(context.application, f"📡 /ping by {update.effective_user.full_name} (ID: {update.effective_user.id})")
 
 @authorized_only
-async def handle_file(update: Update, context):
-    file = update.message.document
-    if file:
-        # Retrieve the file object from Telegram Bot API
-        telegram_file = await context.bot.get_file(file.file_id)
+async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    message = update.message
+    file_name = None
+    file_id = None
 
-        # Determine the path to save the file locally
-        file_path = f"./downloads/{file.file_name}"
+    # תופס כל סוג של קובץ שנשלח
+    if message.document:
+        file_id = message.document.file_id
+        file_name = message.document.file_name
+    elif message.photo:
+        file_id = message.photo[-1].file_id  # מקבל את התמונה הכי באיכות
+        file_name = f"photo_{file_id}.jpg"
+    elif message.video:
+        file_id = message.video.file_id
+        file_name = message.video.file_name or f"video_{file_id}.mp4"
+    else:
+        await message.reply_text("❗ לא זוהה קובץ נתמך להורדה.")
+        return
 
-        try:
-            # Download the file to the local system
-            await telegram_file.download(file_path)
-            await update.message.reply_text(f"File {file.file_name} has been downloaded successfully!")
-        except Exception as e:
-            await update.message.reply_text(f"Failed to download the file. Error: {e}")
-            print(f"Error downloading file: {e}")
-        print(f"File path: {file_path}")
+    # וידוא שהספרייה קיימת
+    os.makedirs(DOWNLOAD_DIR, exist_ok=True)
+    file_path = os.path.join(DOWNLOAD_DIR, file_name)
+
+    try:
+        telegram_file = await context.bot.get_file(file_id)
+        await telegram_file.download_to_drive(file_path)
+
+        await message.reply_text(f"✅ הקובץ '{file_name}' ירד בהצלחה.")
+        print(f"Downloaded to: {file_path}")
+    except Exception as e:
+        await message.reply_text("❌ שגיאה בהורדת הקובץ.")
+        print(f"Error downloading file: {e}")
 
 
 def main():
