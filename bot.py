@@ -52,7 +52,7 @@ def wait_for_file_ready(path, size, timeout=60, interval=1):
     start_time = time.time()
     last_size = -1
 
-    time.sleep(2)  # Initial wait to allow file creation
+    # time.sleep(2)
 
     if not os.path.exists(path):
         print(f"[DEBUG] File not found yet: {path}")
@@ -96,7 +96,7 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         print(f"[DEBUG] Waiting for file to be ready: {file_path}")
 
-        if not wait_for_file_ready(file_path, file_size, timeout=900, interval=3):
+        if not wait_for_file_ready(file_path, file_size, timeout=900, interval=1):
             raise TimeoutError("File not ready after timeout")
 
 
