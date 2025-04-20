@@ -48,7 +48,7 @@ Create a `.env` file in the root directory:
 BOT_TOKEN=your_telegram_bot_token
 ALLOWED_USERS=12345678,87654321
 LOG_CHANNEL_ID=@your_log_channel
-FOLDER_ID=your_google_drive_folder_id
+DRIVE_FOLDER_ID=your_google_drive_folder_id
 ```
 
 ### 2. Google Drive API setup
@@ -97,5 +97,5 @@ telegram2drive/
 
 ## ✨ Credits
 
-Made with ❤️ by Itzik Hanan
+Made with ❤️ by Itzik Hanan, and his best friend Mr. ChatGPT
 
