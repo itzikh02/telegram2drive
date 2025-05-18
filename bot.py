@@ -2,6 +2,7 @@ import os
 from dotenv import load_dotenv
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
+from bot_utils import send_message
 from drive_uploader import upload_file_to_drive
 import logging, time, asyncio
 
@@ -127,7 +128,8 @@ async def ping(update: Update, context: ContextTypes.DEFAULT_TYPE):
     :param context: The context object containing the bot instance.
     """
 
-    await update.message.reply_text("🏓 Pong!")
+    # await update.message.reply_text("🏓 Pong!")
+    await send_message(context.application.bot, update.effective_user.id, "🏓 Pong!")
 
     msg = f"📡 /ping by {update.effective_user.full_name} (ID: {update.effective_user.id})"
     await log_to_channel(context.application, msg)
