@@ -118,7 +118,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     :param update: The update object containing the message.
     :param context: The context object containing the bot instance.
     """
-    await update.message.reply_text("👋 Welcome! Authorized access confirmed.")
+    await send_message(update.effective_user.id, "👋 Welcome!")
 
     msg = f"✅ /start used by {update.effective_user.full_name} (ID: {update.effective_user.id})"
     await log_to_channel(context.application, msg)
