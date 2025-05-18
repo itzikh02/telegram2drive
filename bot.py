@@ -132,7 +132,7 @@ async def ping(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
 
     # await update.message.reply_text("🏓 Pong!")
-    await send_message(context.application.bot, update.effective_user.id, "🏓 Pongooo!")
+    await send_message(update.effective_user.id, "🏓 Pongooo!")
 
     msg = f"📡 /ping by {update.effective_user.full_name} (ID: {update.effective_user.id})"
     await log_to_channel(context.application, msg)
