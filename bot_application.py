@@ -1,5 +1,10 @@
-from telegram.ext import Application
+from dotenv import load_dotenv
 import os
+
+from telegram.ext import Application
+
+# Load environment variables from .env file
+load_dotenv()
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
