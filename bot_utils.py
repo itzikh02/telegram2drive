@@ -1,10 +1,15 @@
+import os
+from dotenv import load_dotenv
 from telegram import Bot
 
-async def send_message(bot: Bot, chat_id: str | int, text: str):
+load_dotenv()
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+bot = Bot(token=BOT_TOKEN)  # מופע עצמאי
+
+async def send_message(chat_id: str | int, text: str):
     """
-    שליחת הודעה דרך הבוט (עובד עם Local Bot API).
+    שליחת הודעה דרך הבוט בצורה עצמאית.
     
-    :param bot: מופע הבוט (application.bot).
     :param chat_id: מזהה הצ'אט או המשתמש.
     :param text: תוכן ההודעה לשליחה.
     """

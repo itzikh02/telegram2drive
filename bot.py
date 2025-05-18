@@ -1,9 +1,12 @@
 import os
 from dotenv import load_dotenv
 from telegram import Update
-from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
+from telegram.ext import CommandHandler, MessageHandler, ContextTypes, filters
+
+from bot_application import app
 from bot_utils import send_message
 from drive_uploader import upload_file_to_drive
+
 import logging, time, asyncio
 
 # Load .env
@@ -129,7 +132,7 @@ async def ping(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
 
     # await update.message.reply_text("🏓 Pong!")
-    await send_message(context.application.bot, update.effective_user.id, "🏓 Pong!")
+    await send_message(context.application.bot, update.effective_user.id, "🏓 Pongooo!")
 
     msg = f"📡 /ping by {update.effective_user.full_name} (ID: {update.effective_user.id})"
     await log_to_channel(context.application, msg)
@@ -180,7 +183,7 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
         msg = f"📥 Downloaded file: {file_name} ({file_size} bytes)"
         await log_to_channel(context.application, msg)
 
-        # Upload to Google Drive
+        # Upload to Google 
         drive_file_id = upload_file_to_drive(local_path, file_name, folder_id=DRIVE_FOLDER_ID)
         await update.message.reply_text(f"✅ File uploaded to Google Drive. File ID: {drive_file_id}")
 
@@ -200,29 +203,17 @@ async def unsupported_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
         parse_mode="Markdown"
     )
 
-def main():
-    app = Application.builder() \
-        .token(BOT_TOKEN) \
-        .base_url("http://localhost:8081/bot") \
-        .base_file_url("http://localhost:8081/file/") \
-        .local_mode(True) \
-        .build()
-
-    file_handler = MessageHandler(filters.Document.ALL, handle_file)
-    unsupported_handler = MessageHandler(
+file_handler = MessageHandler(filters.Document.ALL, handle_file)
+unsupported_handler = MessageHandler(
     filters.PHOTO | filters.VIDEO | filters.AUDIO | filters.VOICE | filters.ANIMATION,
     unsupported_file)
 
-    
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("ping", ping))
+app.add_handler(CommandHandler("start", start))
+app.add_handler(CommandHandler("ping", ping))
 
-    app.add_handler(file_handler)
-    app.add_handler(unsupported_handler)
+app.add_handler(file_handler)
+app.add_handler(unsupported_handler)
 
-    print("✅ Bot is running with Local Bot API. Send /ping to check.")
+print("✅ Bot is running with Local Bot API. Send /ping to check.")
 
-    app.run_polling()
-
-if __name__ == "__main__":
-    main()
+app.run_polling()
