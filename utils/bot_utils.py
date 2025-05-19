@@ -27,19 +27,17 @@ async def handle_all_messages(update: Update, context: ContextTypes.DEFAULT_TYPE
 
 pending_responses = {}  # chat_id -> Future
 
-async def ask_user_input(chat_id: int, message: str) -> str:
-    from utils.bot_application import app  # אם לא מיובא כבר
-
-    await app.bot.send_message(chat_id=chat_id, text=message)
-
+async def ask_user_input(chat_id: int, message: str) -> str | None:
     loop = asyncio.get_event_loop()
     future = loop.create_future()
     pending_responses[chat_id] = future
+
+    await app.bot.send_message(chat_id=chat_id, text=message)
 
     try:
         response = await asyncio.wait_for(future, timeout=60)
         return response
     except asyncio.TimeoutError:
         pending_responses.pop(chat_id, None)
-        return "⏰ זמן ההמתנה עבר"
-
+        await app.bot.send_message(chat_id=chat_id, text="⏰ לא התקבלה תגובה בזמן.")
+        return None
