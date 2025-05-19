@@ -5,13 +5,14 @@ from googleapiclient.http import MediaFileUpload
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 
-from bot_utils import send_message
+from utils.bot_application import app
+from utils.bot_utils import send_message
 
 # If modifying these scopes, delete the file token.pickle.
 SCOPES = ['https://www.googleapis.com/auth/drive.file']
 
 
-def get_drive_service():
+def get_drive_service(user_id: str = None):
     """
     Authenticates and returns a Google Drive API service instance.
     Requires 'credentials.json' to exist in the same directory.
@@ -28,8 +29,14 @@ def get_drive_service():
             flow = InstalledAppFlow.from_client_secrets_file('credentials.json', SCOPES, redirect_uri='http://localhost:8080/')
             auth_url, _ = flow.authorization_url(prompt='consent', access_type='offline')
 
-            print("🔗 Please go to this URL and authorize access:")
-            print(auth_url)
+            if user_id:
+                send_message(user_id, "🔗 Please go to this URL and authorize access:")
+                send_message(user_id, auth_url)
+                send_message(user_id, "📥 Paste the authorization code here:")
+                code = input("📥 Paste the authorization code here: ")
+            else:
+                print("🔗 Please go to this URL and authorize access:")
+                print(auth_url)
 
             code = input("📥 Paste the authorization code here: ")
 

@@ -3,9 +3,9 @@ from dotenv import load_dotenv
 from telegram import Update
 from telegram.ext import CommandHandler, MessageHandler, ContextTypes, filters
 
-from bot_application import app
-from bot_utils import send_message
-from drive_uploader import upload_file_to_drive
+from utils.bot_application import app
+from utils.bot_utils import send_message, handle_message
+from utils.drive_uploader import upload_file_to_drive, get_drive_service
 
 import logging, time, asyncio
 
@@ -133,10 +133,10 @@ async def ping(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # await update.message.reply_text("🏓 Pong!")
     await send_message(update.effective_user.id, "🏓 Pongooo!")
+    await handle_message(update, context)
 
     msg = f"📡 /ping by {update.effective_user.full_name} (ID: {update.effective_user.id})"
     await log_to_channel(context.application, msg)
-
 
 @authorized_only
 async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
