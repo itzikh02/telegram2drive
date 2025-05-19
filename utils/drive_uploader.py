@@ -5,18 +5,12 @@ from googleapiclient.http import MediaFileUpload
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 
-from utils.bot_application import app
-from utils.bot_utils import send_message, ask_user_input
+from utils.bot_utils import send_message
 
 # If modifying these scopes, delete the file token.pickle.
 SCOPES = ['https://www.googleapis.com/auth/drive.file']
 
-
-def get_drive_service(user_id: str = None):
-    """
-    Authenticates and returns a Google Drive API service instance.
-    Requires 'credentials.json' to exist in the same directory.
-    """
+def get_drive_service():
     creds = None
     if os.path.exists('token.pickle'):
         with open('token.pickle', 'rb') as token:
@@ -25,24 +19,10 @@ def get_drive_service(user_id: str = None):
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
+            with open('token.pickle', 'wb') as token:
+                pickle.dump(creds, token)
         else:
-            flow = InstalledAppFlow.from_client_secrets_file('credentials.json', SCOPES, redirect_uri='http://localhost:8080/')
-            auth_url, _ = flow.authorization_url(prompt='consent', access_type='offline')
-
-            if user_id:
-                send_message(user_id, "🔗 Please go to this URL and authorize access:")
-                send_message(user_id, auth_url)
-                code = ask_user_input(user_id, "📥 Paste the authorization code here:")
-            else:
-                print("🔗 Please go to this URL and authorize access:")
-                print(auth_url)
-
-            code = input("📥 Paste the authorization code here: ")
-
-            flow.fetch_token(code=code)
-            creds = flow.credentials
-        with open('token.pickle', 'wb') as token:
-            pickle.dump(creds, token)
+            raise Exception("🚫 No valid token found. Run /auth to authenticate.")
 
     return build('drive', 'v3', credentials=creds)
 
