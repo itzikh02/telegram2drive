@@ -16,4 +16,4 @@ async def send_message(chat_id: str | int, text: str):
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_response = update.message.text
-    send_message(update.effective_chat.id, f"Received: {user_response}")
+    await send_message(update.effective_chat.id, f"Received: {user_response}")
