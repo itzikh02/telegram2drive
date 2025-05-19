@@ -30,6 +30,10 @@ pending_responses = {}  # chat_id -> Future
 async def ask_user_input(chat_id: int, message: str) -> str | None:
     loop = asyncio.get_event_loop()
     future = loop.create_future()
+
+    if chat_id in pending_responses:
+        pending_responses.pop(chat_id, None)  # נקה אם נשאר עתיד קודם
+
     pending_responses[chat_id] = future
 
     await app.bot.send_message(chat_id=chat_id, text=message)
@@ -38,6 +42,7 @@ async def ask_user_input(chat_id: int, message: str) -> str | None:
         response = await asyncio.wait_for(future, timeout=60)
         return response
     except asyncio.TimeoutError:
-        pending_responses.pop(chat_id, None)
+        if chat_id in pending_responses:
+            pending_responses.pop(chat_id)
         await app.bot.send_message(chat_id=chat_id, text="⏰ לא התקבלה תגובה בזמן.")
         return None
