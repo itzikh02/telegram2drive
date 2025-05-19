@@ -1,8 +1,8 @@
 from telegram import Update
 from telegram.ext import CommandHandler, MessageHandler, filters, ConversationHandler, ContextTypes
 
-from bot_utils import send_message
-from drive_auth import start_auth_conversation, finish_auth_conversation
+from utils.bot_utils import send_message
+from utils.drive_auth import start_auth_conversation, finish_auth_conversation
 
 AUTH_CODE = range(1)
 
