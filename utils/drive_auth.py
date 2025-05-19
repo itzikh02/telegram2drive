@@ -2,6 +2,8 @@ import os
 import pickle
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
+from ext.telegram import ConversationHandler
+
 from utils.bot_utils import send_message
 
 SCOPES = ['https://www.googleapis.com/auth/drive.file']
@@ -18,14 +20,14 @@ async def start_auth_conversation(user_id):
 
         if creds and creds.valid:
             await send_message(user_id, "✅ You're already authenticated with Google Drive.")
-            return
+            return ConversationHandler.END
 
         elif creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
             with open(TOKEN_PATH, 'wb') as token_file:
                 pickle.dump(creds, token_file)
             await send_message(user_id, "🔁 Your token was successfully refreshed.")
-            return
+            return ConversationHandler.END
 
     flow = InstalledAppFlow.from_client_secrets_file(
         'credentials.json',
