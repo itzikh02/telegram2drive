@@ -2,7 +2,7 @@ import os
 import pickle
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
-from ext.telegram import ConversationHandler
+from telegram.ext import ConversationHandler
 
 from utils.bot_utils import send_message
 
