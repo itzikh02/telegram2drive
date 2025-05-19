@@ -32,8 +32,9 @@ credentials.json
 # Test python files
 *_test.py
 
-# test folder
+# service folders 
 test/
+creds/
 
 
 # PyInstaller

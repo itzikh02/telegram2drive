@@ -26,7 +26,7 @@ cd telegram2drive
 ### 2. Create and activate a virtual environment
 
 ```bash
-python3 -m venv venv
+python3.12 -m venv venv
 source venv/bin/activate
 ```
 
@@ -57,8 +57,7 @@ DRIVE_FOLDER_ID=your_google_drive_folder_id
 - Create a project and enable the **Google Drive API**
 - Create OAuth 2.0 credentials (Desktop app)
 - Add your google account to the test users list
-- Download the `credentials.json` file and place it in your project root
-- On first run, you’ll be prompted to authorize and generate `token.pickle`
+- Download the `credentials.json` file and place it in your project root folder
 
 ---
 
@@ -76,13 +75,18 @@ python bot.py
 ## 📂 Project Structure
 
 ```
-telegram2drive/
-├── bot.py                 # Main bot script
-├── drive_uploader.py      # Google Drive upload logic
-├── requirements.txt       # Required Python packages
-├── .env                   # Environment variables
-├── credentials.json       # Google OAuth credentials
-└── downloads/             # Local folder for saving files
+/telegram2drive
+├── bot.py
+├── LICENSE
+├── README.md
+├── credentials.json
+├── requirements.txt
+└── utils
+    ├── auth_handler.py
+    ├── bot_application.py
+    ├── bot_utils.py
+    ├── drive_auth.py
+    └── drive_uploader.py
 ```
 
 ---
