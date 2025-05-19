@@ -6,7 +6,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 
 from utils.bot_application import app
-from utils.bot_utils import send_message
+from utils.bot_utils import send_message, ask_user_input
 
 # If modifying these scopes, delete the file token.pickle.
 SCOPES = ['https://www.googleapis.com/auth/drive.file']
@@ -32,8 +32,7 @@ def get_drive_service(user_id: str = None):
             if user_id:
                 send_message(user_id, "🔗 Please go to this URL and authorize access:")
                 send_message(user_id, auth_url)
-                send_message(user_id, "📥 Paste the authorization code here:")
-                code = input("📥 Paste the authorization code here: ")
+                code = ask_user_input(user_id, "📥 Paste the authorization code here:")
             else:
                 print("🔗 Please go to this URL and authorize access:")
                 print(auth_url)
