@@ -4,11 +4,14 @@ from telegram.ext import CommandHandler, MessageHandler, filters, ConversationHa
 from utils.bot_utils import send_message
 from utils.drive_auth import start_auth_conversation, finish_auth_conversation
 
-AUTH_CODE = range(1)
+AUTH_CODE = 1
+TOKEN_VALID = 2
 
 async def auth_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
-    await start_auth_conversation(user_id)
+    result = await start_auth_conversation(user_id)
+    if result:
+        return TOKEN_VALID
     return AUTH_CODE
 
 async def auth_code_received(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -21,8 +24,14 @@ async def auth_cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await send_message(update.effective_user.id, "❌ Authentication canceled.")
     return ConversationHandler.END
 
+async def token_already_valid(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    return ConversationHandler.END
+
 auth_conv_handler = ConversationHandler(
     entry_points=[CommandHandler("auth", auth_start)],
-    states={AUTH_CODE: [MessageHandler(filters.TEXT & ~filters.COMMAND, auth_code_received)]},
+        states={
+        AUTH_CODE: [MessageHandler(filters.TEXT & ~filters.COMMAND, auth_code_received)],
+        TOKEN_VALID: [MessageHandler(filters.ALL, token_already_valid)],
+    },
     fallbacks=[CommandHandler("cancel", auth_cancel)]
 )
