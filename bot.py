@@ -7,7 +7,7 @@ from utils.bot_application import app
 from utils.bot_utils import send_message, log_to_channel
 from utils.drive_uploader import upload_file_to_drive
 from utils.auth_handler import auth_conv_handler
-from utils.auth_utils import authorized_only
+from utils.auth_utils import authorized_only, block_unauthorized
 
 import logging, time, asyncio
 
@@ -91,7 +91,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     msg = f"✅ /start used by {update.effective_user.full_name} (ID: {update.effective_user.id})"
     await log_to_channel(msg)
 
-@authorized_only
+
 async def ping(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
     Handle the /ping command.
@@ -175,13 +175,14 @@ unsupported_handler = MessageHandler(
     filters.PHOTO | filters.VIDEO | filters.AUDIO | filters.VOICE | filters.ANIMATION,
     unsupported_file)
 
-app.add_handler(CommandHandler("start", start))
-app.add_handler(CommandHandler("ping", ping))
+app.add_handler(MessageHandler(filters.ALL, block_unauthorized), group=0)
 
-app.add_handler(file_handler)
-app.add_handler(unsupported_handler)
+app.add_handler(CommandHandler("start", start), group = 1)
+app.add_handler(CommandHandler("ping", ping), group = 1)
 
-app.add_handler(auth_conv_handler)
+app.add_handler(file_handler, group = 1)
+app.add_handler(unsupported_handler, group = 1)
+app.add_handler(auth_conv_handler, group = 1)
 
 print("✅ Bot is running with Local Bot API. Send /ping to check.")
 

@@ -42,6 +42,13 @@ def authorized_only(handler_func):
         return await handler_func(update, context)
     return wrapper
 
+async def block_unauthorized(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = str(update.effective_user.id)
+    if user_id not in ALLOWED_USERS:
+        msg = f"❌ (!) Unauthorized access attempt to {update.message.text} by {update.effective_user.full_name} ({user_id})"
+        await log_to_channel(msg)
+        return
+
 async def start_auth_conversation(user_id):
     creds = None
 
