@@ -47,7 +47,7 @@ Create a `.env` file in the root directory:
 ```env
 BOT_TOKEN=your_telegram_bot_token
 ALLOWED_USERS=12345678,87654321
-LOG_CHANNEL_ID=@your_log_channel
+LOG_CHANNEL_ID=your_log_channel
 DRIVE_FOLDER_ID=your_google_drive_folder_id
 ```
 
@@ -96,6 +96,14 @@ python bot.py
 - The bot uses Telegram **Local Bot API**, not the cloud-based API.
 - You must run the local Telegram Bot API server separately.
 - Files are first saved locally, then uploaded to Google Drive, and then cleaned up if needed.
+
+---
+
+## 📝 Bot Commands
+
+- /start - Start the bot and check your permmisions for to the bot. without any the bot wont respond.
+- /ping - Check if the bot is running
+- /auth
 
 ---
 
