@@ -139,7 +139,7 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         with open(file_path, 'rb') as src, open(local_path, 'wb') as dst:
             downloaded = 0
-            progress_message = send_message(update.effective_user.id, f"📥 Downloading {file_name}: 0%")
+            progress_message = await update.message.reply_text("⬇️ Starting download...")
             last_progress = 0
             while True:
                 chunk = src.read(8192)
