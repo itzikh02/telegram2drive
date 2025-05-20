@@ -23,9 +23,9 @@ async def send_message(chat_id: str | int, text: str):
         await app.bot.send_message(chat_id=chat_id, text=text)
     except Exception as e:
         print(f"[ERROR] Failed to send message: {e}")
-        
 
-async def log_to_channel(application, message: str):
+
+async def log_to_channel(message: str):
     """
     Send a log message to the specified Telegram channel.
 
@@ -34,7 +34,7 @@ async def log_to_channel(application, message: str):
     """
     if LOG_CHANNEL_ID:
         try:
-            await application.bot.send_message(chat_id=LOG_CHANNEL_ID, text=f"📋 {message}")
+            await send_message(chat_id=LOG_CHANNEL_ID, text=f"📋 {message}")
         except Exception as e:
             logging.warning(f"Failed to send log to channel: {e}")
 

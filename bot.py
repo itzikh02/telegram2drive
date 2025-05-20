@@ -34,39 +34,6 @@ if not BOT_TOKEN:
 # Set up logging to console
 logging.basicConfig(level=logging.WARNING)
 
-# async def log_to_channel(application, message: str):
-#     """
-#     Send a log message to the specified Telegram channel.
-
-#     :param application: The Telegram application instance.
-#     :param message: The log message to send.
-#     """
-#     if LOG_CHANNEL_ID:
-#         try:
-#             await application.bot.send_message(chat_id=LOG_CHANNEL_ID, text=f"📋 {message}")
-#         except Exception as e:
-#             logging.warning(f"Failed to send log to channel: {e}")
-
-# def authorized_only(handler_func):
-#     """
-#     Decorator to check if the user is authorized.
-#     If not, log the attempt and deny access.
-#     Use as a decorator (@) for command handlers.
-#     """
-#     async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE):
-#         user = update.effective_user
-        
-#         user_id = str(user.id)
-
-#         if user_id not in ALLOWED_USERS:
-#             msg = f"❌ Unauthorized access attempt by {user.full_name} (ID: {user_id})"
-#             logging.warning(msg)
-#             await log_to_channel(context.application, msg)
-#             return
-
-#         return await handler_func(update, context)
-#     return wrapper
-
 async def get_file_with_retry(bot, file_id, retries=10, delay=10):
     """
     Retrieve a file from Telegram with retry logic.
@@ -122,7 +89,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await send_message(update.effective_user.id, "👋 Welcome!")
 
     msg = f"✅ /start used by {update.effective_user.full_name} (ID: {update.effective_user.id})"
-    await log_to_channel(context.application, msg)
+    await log_to_channel(msg)
 
 @authorized_only
 async def ping(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -136,7 +103,7 @@ async def ping(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await send_message(update.effective_user.id, "🏓 Pong!")
 
     msg = f"📡 /ping by {update.effective_user.full_name} (ID: {update.effective_user.id})"
-    await log_to_channel(context.application, msg)
+    await log_to_channel(msg)
 
 @authorized_only
 async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -152,7 +119,7 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
     file_size = document.file_size
 
     msg = f"[DEBUG] Received file: {file_name} ({file_size} bytes)"
-    await log_to_channel(context.application, msg)
+    await log_to_channel(msg)
 
     try:
         tg_file = await get_file_with_retry(context.bot, file_id)
@@ -161,7 +128,7 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         if not wait_for_file_ready(file_path, file_size, timeout=900, interval=1):
             msg = f"[DEBUG] File not ready after timeout: {file_path}"
-            await log_to_channel(context.application, msg)
+            await log_to_channel(msg)
             raise TimeoutError("File not ready after timeout")
 
 
@@ -175,13 +142,13 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 downloaded += len(chunk)
 
         msg = f"[DEBUG] File copied to: {local_path}"
-        await log_to_channel(context.application, msg)
+        await log_to_channel(msg)
 
         # Remove the file from the bot media temp folder after copying
         os.remove(file_path)
 
         msg = f"📥 Downloaded file: {file_name} ({file_size} bytes)"
-        await log_to_channel(context.application, msg)
+        await log_to_channel(msg)
 
         # Upload to Google 
         drive_file_id = upload_file_to_drive(local_path, file_name, folder_id=DRIVE_FOLDER_ID)
@@ -189,7 +156,7 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     except Exception as e:
         await update.message.reply_text("❌ Failed to save file.")
-        await log_to_channel(context.application, f"❌ Error saving file: {e}")
+        await log_to_channel(f"❌ Error saving file: {e}")
 
 @authorized_only
 async def unsupported_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
