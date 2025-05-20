@@ -7,7 +7,7 @@ from utils.bot_application import app
 from utils.bot_utils import send_message, log_to_channel
 from utils.drive_uploader import upload_file_to_drive
 from utils.auth_handler import auth_conv_handler
-from utils.auth_utils import authorized_only, block_unauthorized
+from utils.auth_utils import authorized_only
 
 import logging, time, asyncio
 
@@ -27,9 +27,17 @@ DOWNLOAD_DIR = "downloads"
 if not os.path.exists(DOWNLOAD_DIR):
     os.makedirs(DOWNLOAD_DIR)
 
-# Check if BOT_TOKEN is set
-if not BOT_TOKEN:
-    raise ValueError("BOT_TOKEN is not set in the .env file")
+# Check if .env is set and loaded correctly
+required_env_vars = {
+    "BOT_TOKEN": BOT_TOKEN,
+    "ALLOWED_USERS": ALLOWED_USERS,
+    "LOG_CHANNEL_ID": LOG_CHANNEL_ID,
+    "DRIVE_FOLDER_ID": DRIVE_FOLDER_ID,
+}
+
+for name, value in required_env_vars.items():
+    if not value:
+        raise ValueError(f"{name} is not set in the .env file")
 
 # Set up logging to console
 logging.basicConfig(level=logging.WARNING)
@@ -91,7 +99,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     msg = f"✅ /start used by {update.effective_user.full_name} (ID: {update.effective_user.id})"
     await log_to_channel(msg)
 
-
+@authorized_only
 async def ping(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
     Handle the /ping command.
@@ -99,7 +107,6 @@ async def ping(update: Update, context: ContextTypes.DEFAULT_TYPE):
     :param context: The context object containing the bot instance.
     """
 
-    # await update.message.reply_text("🏓 Pong!")
     await send_message(update.effective_user.id, "🏓 Pong!")
 
     msg = f"📡 /ping by {update.effective_user.full_name} (ID: {update.effective_user.id})"
@@ -129,17 +136,27 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if not wait_for_file_ready(file_path, file_size, timeout=900, interval=1):
             msg = f"[DEBUG] File not ready after timeout: {file_path}"
             await log_to_channel(msg)
-            raise TimeoutError("File not ready after timeout")
-
 
         with open(file_path, 'rb') as src, open(local_path, 'wb') as dst:
             downloaded = 0
+            progress_message = send_message(update.effective_user.id, f"📥 Downloading {file_name}: 0%")
+            last_progress = 0
             while True:
                 chunk = src.read(8192)
                 if not chunk:
                     break
                 dst.write(chunk)
                 downloaded += len(chunk)
+                progress_percent = int((downloaded / file_size) * 100)
+
+                if progress_percent >= last_progress + 5:
+                    last_progress = progress_percent
+                    try:
+                        await progress_message.edit_text(
+                            f"📥 Downloading {file_name}: {progress_percent}% ({downloaded / (1024 * 1024):.2f} MB / {file_size / (1024 * 1024):.2f} MB)"
+                        )
+                    except Exception as e:
+                        logging.warning(f"Failed to update progress message: {e}")
 
         msg = f"[DEBUG] File copied to: {local_path}"
         await log_to_channel(msg)
@@ -175,14 +192,14 @@ unsupported_handler = MessageHandler(
     filters.PHOTO | filters.VIDEO | filters.AUDIO | filters.VOICE | filters.ANIMATION,
     unsupported_file)
 
-app.add_handler(MessageHandler(filters.ALL, block_unauthorized), group=0)
 
-app.add_handler(CommandHandler("start", start), group = 1)
-app.add_handler(CommandHandler("ping", ping), group = 1)
 
-app.add_handler(file_handler, group = 1)
-app.add_handler(unsupported_handler, group = 1)
-app.add_handler(auth_conv_handler, group = 1)
+app.add_handler(CommandHandler("start", start))
+app.add_handler(CommandHandler("ping", ping))
+
+app.add_handler(file_handler)
+app.add_handler(unsupported_handler)
+app.add_handler(auth_conv_handler)
 
 print("✅ Bot is running with Local Bot API. Send /ping to check.")
 

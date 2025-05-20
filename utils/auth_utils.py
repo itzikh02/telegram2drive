@@ -17,7 +17,6 @@ load_dotenv()
 ALLOWED_USERS = set(os.getenv("ALLOWED_USERS", "").split(","))
 
 SCOPES = ['https://www.googleapis.com/auth/drive.file']
-auth_flows = {}
 
 TOKEN_PATH = 'token.pickle'
 
@@ -42,14 +41,7 @@ def authorized_only(handler_func):
         return await handler_func(update, context)
     return wrapper
 
-async def block_unauthorized(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = str(update.effective_user.id)
-    if user_id not in ALLOWED_USERS:
-        msg = f"❌ (!) Unauthorized access attempt to {update.message.text} by {update.effective_user.full_name} ({user_id})"
-        print(msg)
-        await log_to_channel(msg)
-        context.context.chat_data["_block"] = True
-        return
+auth_flows = {}
 
 async def start_auth_conversation(user_id):
     creds = None
