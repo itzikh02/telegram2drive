@@ -8,15 +8,13 @@ from telegram.ext import ContextTypes
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 
-from utils.bot_utils import send_message
-
+from utils.bot_utils import send_message, log_to_channel
 
 # Load .env
 load_dotenv()
 
 # Load environment variables
 ALLOWED_USERS = set(os.getenv("ALLOWED_USERS", "").split(","))
-LOG_CHANNEL_ID = os.getenv("LOG_CHANNEL_ID")
 
 SCOPES = ['https://www.googleapis.com/auth/drive.file']
 auth_flows = {}
@@ -37,8 +35,8 @@ def authorized_only(handler_func):
         if user_id not in ALLOWED_USERS:
             msg = f"❌ Unauthorized access attempt by {user.full_name} (ID: {user_id})"
             logging.warning(msg)
-            # await log_to_channel(context.application, msg)
-            print(msg)
+            await log_to_channel(context.application, msg)
+
             return
 
         return await handler_func(update, context)

@@ -4,9 +4,10 @@ from telegram import Update
 from telegram.ext import CommandHandler, MessageHandler, ContextTypes, filters
 
 from utils.bot_application import app
-from utils.bot_utils import send_message
+from utils.bot_utils import send_message, log_to_channel
 from utils.drive_uploader import upload_file_to_drive
 from utils.auth_handler import auth_conv_handler
+from utils.auth_utils import authorized_only
 
 import logging, time, asyncio
 
@@ -33,38 +34,38 @@ if not BOT_TOKEN:
 # Set up logging to console
 logging.basicConfig(level=logging.WARNING)
 
-async def log_to_channel(application, message: str):
-    """
-    Send a log message to the specified Telegram channel.
+# async def log_to_channel(application, message: str):
+#     """
+#     Send a log message to the specified Telegram channel.
 
-    :param application: The Telegram application instance.
-    :param message: The log message to send.
-    """
-    if LOG_CHANNEL_ID:
-        try:
-            await application.bot.send_message(chat_id=LOG_CHANNEL_ID, text=f"📋 {message}")
-        except Exception as e:
-            logging.warning(f"Failed to send log to channel: {e}")
+#     :param application: The Telegram application instance.
+#     :param message: The log message to send.
+#     """
+#     if LOG_CHANNEL_ID:
+#         try:
+#             await application.bot.send_message(chat_id=LOG_CHANNEL_ID, text=f"📋 {message}")
+#         except Exception as e:
+#             logging.warning(f"Failed to send log to channel: {e}")
 
-def authorized_only(handler_func):
-    """
-    Decorator to check if the user is authorized.
-    If not, log the attempt and deny access.
-    Use as a decorator (@) for command handlers.
-    """
-    async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        user = update.effective_user
+# def authorized_only(handler_func):
+#     """
+#     Decorator to check if the user is authorized.
+#     If not, log the attempt and deny access.
+#     Use as a decorator (@) for command handlers.
+#     """
+#     async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE):
+#         user = update.effective_user
         
-        user_id = str(user.id)
+#         user_id = str(user.id)
 
-        if user_id not in ALLOWED_USERS:
-            msg = f"❌ Unauthorized access attempt by {user.full_name} (ID: {user_id})"
-            logging.warning(msg)
-            await log_to_channel(context.application, msg)
-            return
+#         if user_id not in ALLOWED_USERS:
+#             msg = f"❌ Unauthorized access attempt by {user.full_name} (ID: {user_id})"
+#             logging.warning(msg)
+#             await log_to_channel(context.application, msg)
+#             return
 
-        return await handler_func(update, context)
-    return wrapper
+#         return await handler_func(update, context)
+#     return wrapper
 
 async def get_file_with_retry(bot, file_id, retries=10, delay=10):
     """
