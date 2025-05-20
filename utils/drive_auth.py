@@ -5,12 +5,14 @@ from google.auth.transport.requests import Request
 
 
 from utils.bot_utils import send_message
+from bot import authorized_only
 
 SCOPES = ['https://www.googleapis.com/auth/drive.file']
 auth_flows = {}
 
 TOKEN_PATH = 'token.pickle'
 
+@authorized_only
 async def start_auth_conversation(user_id):
     creds = None
 

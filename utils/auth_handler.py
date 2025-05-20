@@ -1,12 +1,11 @@
 from telegram import Update
 from telegram.ext import CommandHandler, MessageHandler, filters, ConversationHandler, ContextTypes
 
-from utils.bot_utils import send_message, authorized_only
+from utils.bot_utils import send_message
 from utils.drive_auth import start_auth_conversation, finish_auth_conversation
 
 AUTH_CODE = 1
 
-@authorized_only
 async def auth_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
     result = await start_auth_conversation(user_id)
