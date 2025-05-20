@@ -9,7 +9,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 
 from utils.bot_utils import send_message
-from bot import log_to_channel
+
 
 # Load .env
 load_dotenv()
@@ -37,7 +37,8 @@ def authorized_only(handler_func):
         if user_id not in ALLOWED_USERS:
             msg = f"❌ Unauthorized access attempt by {user.full_name} (ID: {user_id})"
             logging.warning(msg)
-            await log_to_channel(context.application, msg)
+            # await log_to_channel(context.application, msg)
+            print(msg)
             return
 
         return await handler_func(update, context)
