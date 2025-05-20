@@ -3,7 +3,8 @@ import pickle
 import logging
 from dotenv import load_dotenv
 
-from telegram.ext import Update, ContextTypes
+from telegram import Update
+from telegram.ext import ContextTypes
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 
