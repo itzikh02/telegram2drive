@@ -1,18 +1,47 @@
 import os
 import pickle
+import logging
+from dotenv import load_dotenv
+
+from telegram.ext import Update, ContextTypes
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 
-
 from utils.bot_utils import send_message
-from bot import authorized_only
+from bot import log_to_channel
+
+# Load .env
+load_dotenv()
+
+# Load environment variables
+ALLOWED_USERS = set(os.getenv("ALLOWED_USERS", "").split(","))
+LOG_CHANNEL_ID = os.getenv("LOG_CHANNEL_ID")
 
 SCOPES = ['https://www.googleapis.com/auth/drive.file']
 auth_flows = {}
 
 TOKEN_PATH = 'token.pickle'
 
-@authorized_only
+def authorized_only(handler_func):
+    """
+    Decorator to check if the user is authorized.
+    If not, log the attempt and deny access.
+    Use as a decorator (@) for command handlers.
+    """
+    async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        user = update.effective_user
+        
+        user_id = str(user.id)
+
+        if user_id not in ALLOWED_USERS:
+            msg = f"❌ Unauthorized access attempt by {user.full_name} (ID: {user_id})"
+            logging.warning(msg)
+            await log_to_channel(context.application, msg)
+            return
+
+        return await handler_func(update, context)
+    return wrapper
+
 async def start_auth_conversation(user_id):
     creds = None
 
