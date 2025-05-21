@@ -1,6 +1,6 @@
 import os, logging
 
-from load_env import LOG_CHANNEL_ID
+from utils.load_env import LOG_CHANNEL_ID
 from utils.bot_application import app
 
 
