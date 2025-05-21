@@ -19,8 +19,6 @@ from utils.load_env import (
     validate_env
 )
 
-
-
 validate_env()
 
 # Set up logging to console
