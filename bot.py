@@ -128,6 +128,8 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
     msg = f"[DEBUG] Received file: {file_name} ({file_size} bytes)"
     await log_to_channel(msg)
 
+    await update.message.reply_chat_action("upload_document")
+
     try:
         tg_file = await get_file_with_retry(context.bot, file_id)
         file_path = tg_file.file_path
@@ -153,10 +155,12 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     last_progress = progress_percent
                     try:
                         await progress_message.edit_text(
-                            f"📥 Downloading {file_name}: {progress_percent}% ({downloaded / (1024 * 1024):.2f} MB / {file_size / (1024 * 1024):.2f} MB)"
+                            f"📥 Downloading file: {progress_percent}% ({downloaded / (1024 * 1024):.2f} MB / {file_size / (1024 * 1024):.2f} MB)"
                         )
                     except Exception as e:
                         logging.warning(f"Failed to update progress message: {e}")
+
+        await update.message.reply_chat_action()
 
         msg = f"[DEBUG] File copied to: {local_path}"
         await log_to_channel(msg)
@@ -168,11 +172,11 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await log_to_channel(msg)
 
         # Upload to Google 
-        drive_file_id = upload_file_to_drive(local_path, file_name, folder_id=DRIVE_FOLDER_ID)
-        await update.message.reply_text(f"✅ File uploaded to Google Drive. File ID: {drive_file_id}")
+        upload_file_to_drive(local_path, file_name, folder_id=DRIVE_FOLDER_ID)
+        await update.message.reply_text(f"✅ File uploaded to Google Drive")
 
     except Exception as e:
-        await update.message.reply_text("❌ Failed to save file.")
+        await send_message(update.effective_user.id, f"❌ Error: {e}")
         await log_to_channel(f"❌ Error saving file: {e}")
 
 @authorized_only
@@ -191,8 +195,6 @@ file_handler = MessageHandler(filters.Document.ALL, handle_file)
 unsupported_handler = MessageHandler(
     filters.PHOTO | filters.VIDEO | filters.AUDIO | filters.VOICE | filters.ANIMATION,
     unsupported_file)
-
-
 
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("ping", ping))
