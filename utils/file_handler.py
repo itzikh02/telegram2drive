@@ -86,7 +86,7 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
         file_path = tg_file.file_path
         local_path = os.path.join(DOWNLOAD_DIR, file_name)
 
-        if not wait_for_file_ready(file_path, file_size, timeout=900, interval=1):
+        if not wait_for_file_ready(file_path, timeout=900, interval=1):
             await log_to_channel(f"[DEBUG] File not ready after timeout: {file_path}")
 
         with open(file_path, 'rb') as src, open(local_path, 'wb') as dst:
