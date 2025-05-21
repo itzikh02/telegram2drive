@@ -121,7 +121,7 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
     
     if not await check_auth():
-        start_auth_conversation(update.effective_user.id)
+        await start_auth_conversation(update.effective_user.id)
 
 
     document = update.message.document
