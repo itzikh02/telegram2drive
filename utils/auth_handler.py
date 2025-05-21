@@ -17,6 +17,7 @@ async def auth_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def auth_code_received(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
     code = update.message.text.strip()
+    await update.message.edit_text("🔄 Verifying code...")
     await finish_auth_conversation(user_id, code)
     return ConversationHandler.END
 
