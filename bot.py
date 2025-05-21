@@ -160,7 +160,6 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     except Exception as e:
                         logging.warning(f"Failed to update progress message: {e}")
 
-        await update.message.reply_chat_action()
 
         msg = f"[DEBUG] File copied to: {local_path}"
         await log_to_channel(msg)
