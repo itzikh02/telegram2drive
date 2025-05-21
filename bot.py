@@ -125,11 +125,11 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
     file_name = document.file_name
     file_size = document.file_size
 
+
+
     await log_to_channel(f"[DEBUG] Received file: {file_name} ({file_size} bytes)")
 
     progress_message = await update.message.reply_text("⬇️ Starting Upload...")
-
-    await update.message.reply_chat_action("upload_document")
 
     try:
         tg_file = await get_file_with_retry(context.bot, file_id)
