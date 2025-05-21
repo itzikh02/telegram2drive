@@ -125,8 +125,9 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
     file_name = document.file_name
     file_size = document.file_size
 
-    msg = f"[DEBUG] Received file: {file_name} ({file_size} bytes)"
-    await log_to_channel(msg)
+    await log_to_channel(f"[DEBUG] Received file: {file_name} ({file_size} bytes)")
+
+    progress_message = await update.message.reply_text("⬇️ Starting Upload...")
 
     await update.message.reply_chat_action("upload_document")
 
@@ -136,12 +137,12 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
         local_path = os.path.join(DOWNLOAD_DIR, file_name)
 
         if not wait_for_file_ready(file_path, file_size, timeout=900, interval=1):
-            msg = f"[DEBUG] File not ready after timeout: {file_path}"
-            await log_to_channel(msg)
+            await log_to_channel(f"[DEBUG] File not ready after timeout: {file_path}")
 
         with open(file_path, 'rb') as src, open(local_path, 'wb') as dst:
+            
             downloaded = 0
-            progress_message = await update.message.reply_text("⬇️ Starting download...")
+            
             last_progress = 0
             while True:
                 chunk = src.read(8192)
@@ -155,20 +156,18 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     last_progress = progress_percent
                     try:
                         await progress_message.edit_text(
-                            f"📥 Downloading file: {progress_percent}% ({downloaded / (1024 * 1024):.2f} MB / {file_size / (1024 * 1024):.2f} MB)"
+                            f"📥 Uploading file: {progress_percent}% ({downloaded / (1024 * 1024):.2f} MB / {file_size / (1024 * 1024):.2f} MB)"
                         )
                     except Exception as e:
                         logging.warning(f"Failed to update progress message: {e}")
 
 
-        msg = f"[DEBUG] File copied to: {local_path}"
-        await log_to_channel(msg)
+        await log_to_channel(f"[DEBUG] File copied to: {local_path}")
 
         # Remove the file from the bot media temp folder after copying
         os.remove(file_path)
 
-        msg = f"📥 Downloaded file: {file_name} ({file_size} bytes)"
-        await log_to_channel(msg)
+        await log_to_channel(f"📥 Downloaded file: {file_name} ({file_size} bytes)")
 
         # Upload to Google 
         upload_file_to_drive(local_path, file_name, folder_id=DRIVE_FOLDER_ID)
