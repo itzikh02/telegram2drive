@@ -120,7 +120,7 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
     :param context: The context object containing the bot instance.
     """
     
-    if not check_auth():
+    if not await check_auth():
         start_auth_conversation(update.effective_user.id)
 
 
