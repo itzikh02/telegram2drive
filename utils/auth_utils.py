@@ -41,6 +41,27 @@ def authorized_only(handler_func):
         return await handler_func(update, context)
     return wrapper
 
+async def check_auth():
+    """
+    Check if the user is authorized.
+    If not, start the authorization process.
+    """
+    creds = None
+
+    if os.path.exists(TOKEN_PATH):
+        with open(TOKEN_PATH, 'rb') as token_file:
+            creds = pickle.load(token_file)
+
+        if creds and creds.valid:
+            return True
+
+        elif creds and creds.expired and creds.refresh_token:
+            creds.refresh(Request())
+            with open(TOKEN_PATH, 'wb') as token_file:
+                pickle.dump(creds, token_file)
+            return True
+    return False
+
 auth_flows = {}
 
 async def start_auth_conversation(user_id):

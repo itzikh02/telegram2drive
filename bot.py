@@ -7,7 +7,7 @@ from utils.bot_application import app
 from utils.bot_utils import send_message, log_to_channel
 from utils.drive_uploader import upload_file_to_drive
 from utils.auth_handler import auth_conv_handler
-from utils.auth_utils import authorized_only
+from utils.auth_utils import authorized_only, check_auth, start_auth_conversation
 
 import logging, time, asyncio
 
@@ -119,6 +119,10 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
     :param update: The update object containing the message.
     :param context: The context object containing the bot instance.
     """
+    
+    if not check_auth():
+        start_auth_conversation(update.effective_user.id)
+
 
     document = update.message.document
     file_id = document.file_id
