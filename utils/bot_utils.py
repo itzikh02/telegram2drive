@@ -1,16 +1,9 @@
 import os, logging
-from dotenv import load_dotenv
+
 
 from utils.bot_application import app
 
-# Load .env
-load_dotenv()
 
-# Load environment variables
-BOT_TOKEN = os.getenv("BOT_TOKEN")
-ALLOWED_USERS = set(os.getenv("ALLOWED_USERS", "").split(","))
-LOG_CHANNEL_ID = os.getenv("LOG_CHANNEL_ID")
-DRIVE_FOLDER_ID = os.getenv("DRIVE_FOLDER_ID")
 
 async def send_message(chat_id: str | int, text: str):
     """
