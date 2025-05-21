@@ -3,6 +3,7 @@ from telegram.ext import CommandHandler, MessageHandler, filters, ConversationHa
 
 from utils.bot_utils import send_message
 from utils.auth_utils import start_auth_conversation, finish_auth_conversation, authorized_only
+from utils.file_handler import handle_file
 
 AUTH_CODE = 1
 
@@ -17,6 +18,16 @@ async def auth_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def auth_code_received(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
     code = update.message.text.strip()
+    
+    user_id = str(update.effective_user.id)
+    code = update.message.text.strip()
+    success = await finish_auth_conversation(user_id, code)
+
+    if success:
+        action = context.user_data.pop("post_auth_action", None)
+        if action and action["func"] == "handle_file":
+            await handle_file(action["update"], context)
+
     await finish_auth_conversation(user_id, code)
     return ConversationHandler.END
 
