@@ -1,4 +1,4 @@
-import os, logging
+import logging
 
 from utils.load_env import LOG_CHANNEL_ID
 from utils.bot_application import app

@@ -16,6 +16,7 @@ load_dotenv()
 # Load environment variables
 ALLOWED_USERS = set(os.getenv("ALLOWED_USERS", "").split(","))
 
+
 SCOPES = ['https://www.googleapis.com/auth/drive.file']
 
 TOKEN_PATH = 'token.pickle'

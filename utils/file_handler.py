@@ -4,7 +4,7 @@ import os, time, logging, asyncio
 
 from telegram.ext import CommandHandler, MessageHandler, ContextTypes, filters
 
-from load_env import DOWNLOAD_DIR, DRIVE_FOLDER_ID
+from utils.load_env import DOWNLOAD_DIR, DRIVE_FOLDER_ID
 from utils.auth_utils import authorized_only, check_auth
 from utils.bot_utils import send_message, log_to_channel
 from utils.drive_uploader import upload_file_to_drive
