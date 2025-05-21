@@ -64,13 +64,9 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
     
     if not await check_auth():
-        context.user_data["post_auth_action"] = {
-            "func": "handle_file",
-            "update": update,
-        }
         await send_message(update.effective_user.id, "🔐 Please authenticate first with /auth")
         return
-    await send_message(update.effective_user.id, "📄 File received after authentication.")
+
         
 
 
