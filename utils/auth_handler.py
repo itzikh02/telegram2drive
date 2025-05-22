@@ -9,7 +9,7 @@ AUTH_CODE = 1
 @authorized_only
 async def auth_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
-    result = await start_auth_conversation(user_id)
+    result = await start_auth_conversation(user_id, update=update)
     if result:
         return ConversationHandler.END
     return AUTH_CODE

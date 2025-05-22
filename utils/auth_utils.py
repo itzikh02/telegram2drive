@@ -63,7 +63,7 @@ async def check_auth():
 
 auth_flows = {}
 
-async def start_auth_conversation(user_id):
+async def start_auth_conversation(user_id, update: Update):
     creds = None
 
     if os.path.exists(TOKEN_PATH):
@@ -93,7 +93,7 @@ async def start_auth_conversation(user_id):
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
-    await Update.message.reply_text(f"🔗 Please authorize access:\nThen paste the code here:", reply_markup=reply_markup)
+    await update.message.reply_text(f"🔗 Please authorize access:\nThen paste the code here:", reply_markup=reply_markup)
 
     # await send_message(user_id, f"🔗 Please authorize access:\n{auth_url}\n\nThen paste the code here:")
 
