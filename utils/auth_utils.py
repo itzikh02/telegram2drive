@@ -93,9 +93,8 @@ async def start_auth_conversation(user_id, update: Update):
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
-    await update.message.reply_text(f"🔗 Please authorize access:\nThen paste the code here:", reply_markup=reply_markup)
+    await update.message.reply_text(f"🔗 Please authorize access, then paste the code here:", reply_markup=reply_markup)
 
-    # await send_message(user_id, f"🔗 Please authorize access:\n{auth_url}\n\nThen paste the code here:")
 
 async def finish_auth_conversation(user_id, code):
     flow = auth_flows.get(user_id)
