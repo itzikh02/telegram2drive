@@ -83,10 +83,12 @@ python bot.py
 ├── requirements.txt
 └── utils
     ├── auth_handler.py
+    ├── auth_utils.py
     ├── bot_application.py
     ├── bot_utils.py
-    ├── drive_auth.py
-    └── drive_uploader.py
+    ├── drive_uploader.py
+    ├── file_handler.py
+    └── load_env.py
 ```
 
 ---
@@ -103,7 +105,7 @@ python bot.py
 
 - /start - Start the bot and check your permmisions for to the bot. without any the bot wont respond.
 - /ping - Check if the bot is running
-- /auth
+- /auth - Login with your Google Account and allow the bot to use your Google Drive
 
 ---
 
