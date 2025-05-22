@@ -32,6 +32,11 @@ credentials.json
 # Test python files
 *_test.py
 
+# service folders 
+test/
+creds/
+
+
 # PyInstaller
 #  Usually these files are written by a python script from a template
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
