@@ -2,7 +2,7 @@ import os
 import pickle
 from dotenv import load_dotenv
 
-from telegram import Update
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
@@ -88,7 +88,14 @@ async def start_auth_conversation(user_id):
     auth_url, _ = flow.authorization_url(prompt='consent', access_type='offline')
     auth_flows[user_id] = flow
 
-    await send_message(user_id, f"🔗 Please authorize access:\n{auth_url}\n\nThen paste the code here:")
+    keyboard = [
+        [InlineKeyboardButton("🔗 Authentication link", url=auth_url)]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+
+    await Update.message.reply_text(f"🔗 Please authorize access:\nThen paste the code here:", reply_markup=reply_markup)
+
+    # await send_message(user_id, f"🔗 Please authorize access:\n{auth_url}\n\nThen paste the code here:")
 
 async def finish_auth_conversation(user_id, code):
     flow = auth_flows.get(user_id)
