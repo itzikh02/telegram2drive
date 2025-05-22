@@ -1,6 +1,5 @@
 import os
 import pickle
-import logging
 from dotenv import load_dotenv
 
 from telegram import Update
@@ -34,7 +33,6 @@ def authorized_only(handler_func):
 
         if user_id not in ALLOWED_USERS:
             msg = f"❌ Unauthorized access attempt by {user.full_name} (ID: {user_id})"
-            # logging.warning(msg)
             await log_to_channel(msg)
 
             return

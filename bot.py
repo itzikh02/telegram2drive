@@ -7,7 +7,7 @@ import logging
 from utils.bot_application import app
 from utils.bot_utils import send_message, log_to_channel
 from utils.auth_handler import auth_conv_handler
-from utils.auth_utils import authorized_only
+from utils.auth_utils import authorized_only, check_auth
 from utils.file_handler import handle_file, unsupported_file, file_handler
 
 from utils.load_env import (
@@ -35,6 +35,10 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     msg = f"✅ /start used by {update.effective_user.full_name} (ID: {update.effective_user.id})"
     await log_to_channel(msg)
+
+    if not await check_auth():
+        await send_message(update.effective_user.id, "🔐 Please authenticate to Google with /auth")
+        return
 
 @authorized_only
 async def ping(update: Update, context: ContextTypes.DEFAULT_TYPE):
