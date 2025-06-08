@@ -82,7 +82,7 @@ async def start_auth_conversation(user_id, update: Update):
                 await send_message(user_id, "🔁 Your token was successfully refreshed.")
                 return True
             except Exception as e:
-                log_to_channel(f"❌ Error refreshing token for user {user_id}: {e}")
+                await log_to_channel(f"❌ Error refreshing token for user {user_id}: {e}")
                 # os.remove(TOKEN_PATH)
                 await send_message(user_id, "⚠️ Your previous token was expired or revoked. Please authorize again.")                
 
