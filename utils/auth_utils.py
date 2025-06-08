@@ -83,7 +83,7 @@ async def start_auth_conversation(user_id, update: Update):
                 return True
             except Exception as e:
                 await log_to_channel(f"❌ Error refreshing token for user {user_id}: {e}")
-                # os.remove(TOKEN_PATH)
+                os.remove(TOKEN_PATH)
                 await send_message(user_id, "⚠️ Your previous token was expired or revoked. Please authorize again.")                
 
     flow = InstalledAppFlow.from_client_secrets_file(
