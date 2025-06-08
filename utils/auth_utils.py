@@ -75,11 +75,17 @@ async def start_auth_conversation(user_id, update: Update):
             return True
 
         elif creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-            with open(TOKEN_PATH, 'wb') as token_file:
-                pickle.dump(creds, token_file)
-            await send_message(user_id, "🔁 Your token was successfully refreshed.")
-            return True
+            try:
+                creds.refresh(Request())
+                with open(TOKEN_PATH, 'wb') as token_file:
+                    pickle.dump(creds, token_file)
+                await send_message(user_id, "🔁 Your token was successfully refreshed.")
+                return True
+            except Exception as e:
+                log_to_channel(f"❌ Error refreshing token for user {user_id}: {e}")
+                # os.remove(TOKEN_PATH)
+                await send_message(user_id, "⚠️ Your previous token was expired or revoked. Please authorize again.")                
+
     flow = InstalledAppFlow.from_client_secrets_file(
         'credentials.json',
         SCOPES,
