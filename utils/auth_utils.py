@@ -1,7 +1,9 @@
 import os
+import asyncio
+
 from dotenv import load_dotenv
 
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import Update
 from telegram.ext import ContextTypes
 from google.auth.transport.requests import Request
 
@@ -151,7 +153,8 @@ async def auth_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     timeout = 300  # seconds
 
     while time.time() - start_time < timeout:
-        time.sleep(interval)
+        await asyncio.sleep(interval)
+
         token_response = requests.post(
             token_url,
             data={
@@ -178,6 +181,10 @@ async def auth_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             continue
         else:
             await send_message(user_id, f"❌ Authentication failed: {token_response.json().get('error_description', error)}")
-
-    await send_message(user_id, "❌ Authentication timed out. Please try again.")
+            return False
+        
+    await update.message.reply_text(
+    "❌ Authentication timed out. Please try again.\nYou can restart with /auth"
+    )
+    
     return False
