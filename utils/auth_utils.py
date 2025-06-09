@@ -3,7 +3,6 @@ from dotenv import load_dotenv
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
-from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 
 # Reconstruct credentials object from raw token data
@@ -105,10 +104,12 @@ def require_auth(handler_func):
 
 auth_flows = {}
 
-async def start_auth_conversation(user_id, update: Update):
+@authorized_only
+async def auth_start(update: Update):
     """
     Start the OAuth device flow using 'TV and Limited Input' client.
     """
+    user_id = str(update.effective_user.id)
     if await check_auth():
         await send_message(user_id, "🔐 You are already authenticated.")
         return True
