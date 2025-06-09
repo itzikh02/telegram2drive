@@ -71,6 +71,10 @@ async def start_auth_conversation(user_id, update: Update):
     """
     Start the OAuth device flow using 'TV and Limited Input' client.
     """
+    if await check_auth():
+        await send_message(user_id, "🔐 You are already authenticated.")
+        return True
+    
     with open("client_tv.json") as f:
         client_info = json.load(f)["installed"]
 

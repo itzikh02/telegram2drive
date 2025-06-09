@@ -19,14 +19,10 @@ async def auth_code_received(update: Update, context: ContextTypes.DEFAULT_TYPE)
     code = update.message.text.strip()
     await update.message.delete()
     await send_message(user_id, "🔒 Authenticating...")
-    # await finish_auth_conversation(user_id, code)
     return ConversationHandler.END
 
 async def auth_cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await send_message(update.effective_user.id, "❌ Authentication canceled.")
-    return ConversationHandler.END
-
-async def token_already_valid(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return ConversationHandler.END
 
 auth_conv_handler = ConversationHandler(
