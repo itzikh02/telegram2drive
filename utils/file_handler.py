@@ -5,7 +5,7 @@ import os, time, logging, asyncio
 from telegram.ext import CommandHandler, MessageHandler, ContextTypes, filters
 
 from utils.load_env import DOWNLOAD_DIR, DRIVE_FOLDER_ID
-from utils.auth_utils import authorized_only, check_auth
+from utils.auth_utils import authorized_only, check_auth, require_auth
 from utils.bot_utils import send_message, log_to_channel
 from utils.drive_uploader import upload_file_to_drive
 
@@ -56,25 +56,18 @@ def wait_for_file_ready(path, timeout=60, interval=1):
 
 
 @authorized_only
+@require_auth
 async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
     Handle incoming files.
     :param update: The update object containing the message.
     :param context: The context object containing the bot instance.
-    """
-    
-    if not await check_auth():
-        await send_message(update.effective_user.id, "🔐 Please authenticate first with /auth")
-        return
-
-        
-
+    """    
 
     document = update.message.document
     file_id = document.file_id
     file_name = document.file_name
     file_size = document.file_size
-
 
 
     await log_to_channel(f"[DEBUG] Received file: {file_name} ({file_size} bytes)")
