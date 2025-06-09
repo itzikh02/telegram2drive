@@ -105,11 +105,18 @@ def require_auth(handler_func):
 
 auth_flows = {}
 
+import asyncio
+import time
+import json
+import requests
+from telegram import Update
+from telegram.ext import ContextTypes
+
+from utils.bot_utils import send_message
+from utils.auth_utils import authorized_only, check_auth, TOKEN_PATH
+
 @authorized_only
 async def auth_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """
-    Start the OAuth device flow using 'TV and Limited Input' client.
-    """
     user_id = str(update.effective_user.id)
     if await check_auth():
         await send_message(user_id, "🔐 You are already authenticated.")
@@ -123,7 +130,6 @@ async def auth_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     scope = "https://www.googleapis.com/auth/drive.file"
 
-    # Step 1: Request device and user code
     device_code_response = requests.post(
         "https://oauth2.googleapis.com/device/code",
         data={
@@ -136,8 +142,8 @@ async def auth_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     verification_url = device_code_response["verification_url"]
     device_code = device_code_response["device_code"]
     interval = device_code_response.get("interval", 5)
+    timeout = 300
 
-    # Step 2: Prompt user to visit the URL and enter the code
     await update.message.reply_text(
         f"🔐 To authorize the bot to access your Google Drive:\n\n"
         f"1. Go to: {verification_url}\n"
@@ -146,10 +152,13 @@ async def auth_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         parse_mode="Markdown"
     )
 
-    # Step 3: Poll Google's token endpoint until authorized
+    asyncio.create_task(
+        poll_for_token(user_id, client_id, client_secret, device_code, interval, timeout, update)
+    )
+
+async def poll_for_token(user_id, client_id, client_secret, device_code, interval, timeout, update):
     token_url = "https://oauth2.googleapis.com/token"
     start_time = time.time()
-    timeout = 300  # seconds
 
     while time.time() - start_time < timeout:
         await asyncio.sleep(interval)
@@ -183,6 +192,6 @@ async def auth_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return False
 
     await update.message.reply_text(
-    "❌ Authentication timed out. Please try again.\nYou can restart with /auth"
+        "❌ Authentication timed out. Please try again.\nYou can restart with /auth"
     )
     return False
