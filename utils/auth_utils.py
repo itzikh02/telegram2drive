@@ -7,6 +7,10 @@ from telegram.ext import ContextTypes
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 
+# Reconstruct credentials object from raw token data
+from google.oauth2.credentials import Credentials
+from google.auth.transport.requests import Request
+
 from utils.bot_utils import send_message, log_to_channel
 
 import requests
@@ -46,23 +50,46 @@ def authorized_only(handler_func):
 
 async def check_auth():
     """
-    Check if the user is authorized.
-    If not, start the authorization process.
+    Check if the user is authorized using the token from device flow.
     """
-    creds = None
 
     if os.path.exists(TOKEN_PATH):
         with open(TOKEN_PATH, 'rb') as token_file:
-            creds = pickle.load(token_file)
+            token_data = pickle.load(token_file)
 
-        if creds and creds.valid:
-            return True
+        with open("credentials.json") as f:
+            client_info = json.load(f)["installed"]
 
-        elif creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-            with open(TOKEN_PATH, 'wb') as token_file:
-                pickle.dump(creds, token_file)
-            return True
+        client_id = client_info["client_id"]
+        client_secret = client_info.get("client_secret")
+        scope = "https://www.googleapis.com/auth/drive.file"
+
+        creds = Credentials(
+            token=token_data["access_token"],
+            refresh_token=token_data.get("refresh_token"),
+            token_uri="https://oauth2.googleapis.com/token",
+            client_id=client_id,
+            client_secret=client_secret,
+            scopes=[scope]
+        )
+
+    # Refresh if needed
+        if creds and creds.expired and creds.refresh_token:
+            try:
+                creds.refresh(Request())
+                # Save updated credentials
+                updated_token_data = {
+                    "access_token": creds.token,
+                    "refresh_token": creds.refresh_token,
+                    "scope": scope,
+                    "token_type": "Bearer",
+                    "expiry": creds.expiry.isoformat() if creds.expiry else None,
+                }
+                with open(TOKEN_PATH, 'wb') as token_file:
+                    pickle.dump(updated_token_data, token_file)
+            except Exception:
+                    return False
+            return creds and creds.valid
     return False
 
 auth_flows = {}
@@ -129,7 +156,7 @@ async def start_auth_conversation(user_id, update: Update):
                 pickle.dump(creds, token_file)
             await send_message(user_id, "✅ Google Drive authentication successful.")
             return True
-        elif token_response.status_code == 428 or token_response.status_code ==  authorization_pending:
+        elif token_response.status_code == 400 and token_response.json().get("error") == "authorization_pending":
             continue
         else:
             await send_message(user_id, f"❌ Authentication failed: {token_response.json().get('error_description')}")
