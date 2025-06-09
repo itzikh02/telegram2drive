@@ -140,6 +140,7 @@ async def unsupported_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 file_handler = MessageHandler(filters.Document.ALL, handle_file)
+
 unsupported_handler = MessageHandler(
     filters.PHOTO | filters.VIDEO | filters.AUDIO | filters.VOICE | filters.ANIMATION,
     unsupported_file)
