@@ -1,5 +1,4 @@
 import os
-import pickle
 from dotenv import load_dotenv
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
@@ -26,7 +25,7 @@ ALLOWED_USERS = set(os.getenv("ALLOWED_USERS", "").split(","))
 
 SCOPES = ['https://www.googleapis.com/auth/drive.file']
 
-TOKEN_PATH = 'token.pickle'
+TOKEN_PATH = 'token.json'
 
 def authorized_only(handler_func):
     """
@@ -54,8 +53,8 @@ async def check_auth():
     """
 
     if os.path.exists(TOKEN_PATH):
-        with open(TOKEN_PATH, 'rb') as token_file:
-            token_data = pickle.load(token_file)
+        with open(TOKEN_PATH, 'r') as token_file:
+            token_data = json.load(token_file)
 
         with open("credentials.json") as f:
             client_info = json.load(f)["installed"]
@@ -88,8 +87,8 @@ async def check_auth():
                     "token_type": "Bearer",
                     "expiry": creds.expiry.isoformat() if creds.expiry else None,
                 }
-                with open(TOKEN_PATH, 'wb') as token_file:
-                    pickle.dump(updated_token_data, token_file)
+                with open(TOKEN_PATH, 'w') as token_file:
+                    json.dump(updated_token_data, token_file)
             except Exception:
                 return False
             
@@ -164,8 +163,8 @@ async def start_auth_conversation(user_id, update: Update):
 
         if token_response.status_code == 200:
             token_data = token_response.json()
-            with open(TOKEN_PATH, "wb") as token_file:
-                pickle.dump(token_data, token_file)
+            with open(TOKEN_PATH, "w") as token_file:
+                json.dump(token_data, token_file)
             await send_message(user_id, "✅ Google Drive authentication successful.")
             return True
         
