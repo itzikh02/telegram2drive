@@ -161,18 +161,23 @@ async def start_auth_conversation(user_id, update: Update):
                 "grant_type": "urn:ietf:params:oauth:grant-type:device_code",
             },
         )
+
         if token_response.status_code == 200:
             token_data = token_response.json()
-            creds = token_data
             with open(TOKEN_PATH, "wb") as token_file:
-                pickle.dump(creds, token_file)
+                pickle.dump(token_data, token_file)
             await send_message(user_id, "✅ Google Drive authentication successful.")
             return True
-        elif token_response.status_code == 400 and token_response.json().get("error") == "authorization_pending":
+        
+        error = token_response.json().get("error")
+
+        if error == "authorization_pending":
+            continue
+        elif error == "slow_down":
+            interval += 5
             continue
         else:
-            await send_message(user_id, f"❌ Authentication failed: {token_response.json().get('error_description')}")
-            return False
+            await send_message(user_id, f"❌ Authentication failed: {token_response.json().get('error_description', error)}")
 
     await send_message(user_id, "❌ Authentication timed out. Please try again.")
     return False
