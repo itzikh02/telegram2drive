@@ -82,12 +82,13 @@ async def check_auth():
                 return True
             except Exception as e:
                 if os.path.exists(TOKEN_PATH):
-                    # os.remove(TOKEN_PATH)
-                    await log_to_channel("🧨 Auth token will be deleted 1")
+                    os.remove(TOKEN_PATH)
+                    await log_to_channel("🧨 Access token appeared valid but was rejected by API. Token file deleted.")
                 await log_to_channel("🧨 Access token appeared valid but failed API call. Token deleted.")
                 return False
 
-        # Refresh if needed
+        # Refresh if token is expired and refresh_token exists
+        # This will also catch cases where the refresh_token was revoked
         if creds and creds.expired and creds.refresh_token:
             try:
                 creds.refresh(Request())
@@ -103,8 +104,8 @@ async def check_auth():
             except RefreshError as e:
                 if "invalid_grant" in str(e):
                     if os.path.exists(TOKEN_PATH):
-                        # os.remove(TOKEN_PATH)
-                        await log_to_channel("🧨 Auth token will be deleted 2")
+                        os.remove(TOKEN_PATH)
+                        await log_to_channel("🧨 Refresh token invalid or revoked. Token file deleted.")
                     await log_to_channel("🧨 Auth token was invalid or revoked. Token file was deleted.")
                 return False
             except Exception:
