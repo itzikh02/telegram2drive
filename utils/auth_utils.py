@@ -73,7 +73,10 @@ async def check_auth():
             scopes=[scope]
         )
 
-    # Refresh if needed
+        if creds and creds.valid:
+            return True
+
+        # Refresh if needed
         if creds and creds.expired and creds.refresh_token:
             try:
                 creds.refresh(Request())
@@ -88,8 +91,9 @@ async def check_auth():
                 with open(TOKEN_PATH, 'wb') as token_file:
                     pickle.dump(updated_token_data, token_file)
             except Exception:
-                    return False
-            return creds and creds.valid
+                return False
+            
+        return bool(creds and creds.valid)
     return False
 
 auth_flows = {}
