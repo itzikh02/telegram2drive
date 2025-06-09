@@ -105,7 +105,7 @@ def require_auth(handler_func):
 auth_flows = {}
 
 @authorized_only
-async def auth_start(update: Update):
+async def auth_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
     Start the OAuth device flow using 'TV and Limited Input' client.
     """
