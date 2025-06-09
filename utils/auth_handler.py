@@ -2,7 +2,7 @@ from telegram import Update
 from telegram.ext import CommandHandler, MessageHandler, filters, ConversationHandler, ContextTypes
 
 from utils.bot_utils import send_message
-from utils.auth_utils import start_auth_conversation, finish_auth_conversation, authorized_only
+from utils.auth_utils import start_auth_conversation, authorized_only
 
 AUTH_CODE = 1
 
@@ -19,7 +19,7 @@ async def auth_code_received(update: Update, context: ContextTypes.DEFAULT_TYPE)
     code = update.message.text.strip()
     await update.message.delete()
     await send_message(user_id, "🔒 Authenticating...")
-    await finish_auth_conversation(user_id, code)
+    # await finish_auth_conversation(user_id, code)
     return ConversationHandler.END
 
 async def auth_cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
