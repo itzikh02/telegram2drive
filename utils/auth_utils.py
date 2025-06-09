@@ -1,9 +1,8 @@
 import os
+from dotenv import load_dotenv
 import asyncio
 
-from dotenv import load_dotenv
-
-from telegram import Update
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
 from google.auth.transport.requests import Request
 
@@ -171,7 +170,7 @@ async def auth_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 json.dump(token_data, token_file)
             await send_message(user_id, "✅ Google Drive authentication successful.")
             return True
-        
+
         error = token_response.json().get("error")
 
         if error == "authorization_pending":
@@ -182,9 +181,8 @@ async def auth_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         else:
             await send_message(user_id, f"❌ Authentication failed: {token_response.json().get('error_description', error)}")
             return False
-        
+
     await update.message.reply_text(
     "❌ Authentication timed out. Please try again.\nYou can restart with /auth"
     )
-    
     return False
