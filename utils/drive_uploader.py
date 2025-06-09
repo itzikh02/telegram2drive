@@ -1,5 +1,9 @@
 import os
 import pickle
+
+from telegram import Update
+from telegram.ext import ContextTypes
+
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -12,7 +16,7 @@ from utils.auth_utils import require_auth
 SCOPES = ['https://www.googleapis.com/auth/drive.file']
 
 @require_auth
-def get_drive_service():
+def get_drive_service(update: Update, context: ContextTypes.DEFAULT_TYPE):
     creds = None
     if os.path.exists('token.pickle'):
         with open('token.pickle', 'rb') as token:
