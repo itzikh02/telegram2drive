@@ -9,6 +9,10 @@ from google.auth.transport.requests import Request
 
 from utils.bot_utils import send_message, log_to_channel
 
+import requests
+import time
+import json
+
 # Load .env
 load_dotenv()
 
@@ -64,57 +68,68 @@ async def check_auth():
 auth_flows = {}
 
 async def start_auth_conversation(user_id, update: Update):
-    creds = None
+    """
+    Start the OAuth device flow using 'TV and Limited Input' client.
+    """
+    with open("client_tv.json") as f:
+        client_info = json.load(f)["installed"]
 
-    if os.path.exists(TOKEN_PATH):
-        with open(TOKEN_PATH, 'rb') as token_file:
-            creds = pickle.load(token_file)
+    client_id = client_info["client_id"]
+    client_secret = client_info.get("client_secret")  # Optional for installed apps
 
-        if creds and creds.valid:
-            await send_message(user_id, "✅ You're already authenticated with Google Drive.")
-            return True
+    scope = "https://www.googleapis.com/auth/drive.file"
 
-        elif creds and creds.expired and creds.refresh_token:
-            try:
-                creds.refresh(Request())
-                with open(TOKEN_PATH, 'wb') as token_file:
-                    pickle.dump(creds, token_file)
-                await send_message(user_id, "🔁 Your token was successfully refreshed.")
-                return True
-            except Exception as e:
-                await log_to_channel(f"❌ Error refreshing token for user {user_id}: {e}")
-                os.remove(TOKEN_PATH)
-                await send_message(user_id, "⚠️ Your previous token was expired or revoked. Please authorize again.")                
+    # Step 1: Request device and user code
+    device_code_response = requests.post(
+        "https://oauth2.googleapis.com/device/code",
+        data={
+            "client_id": client_id,
+            "scope": scope
+        },
+    ).json()
 
-    flow = InstalledAppFlow.from_client_secrets_file(
-        'credentials.json',
-        SCOPES,
-        redirect_uri='urn:ietf:wg:oauth:2.0:oob'
+    user_code = device_code_response["user_code"]
+    verification_url = device_code_response["verification_url"]
+    device_code = device_code_response["device_code"]
+    interval = device_code_response.get("interval", 5)
+
+    # Step 2: Prompt user to visit the URL and enter the code
+    await update.message.reply_text(
+        f"🔐 To authorize the bot to access your Google Drive:\n\n"
+        f"1. Go to: {verification_url}\n"
+        f"2. Enter the code: `{user_code}`\n\n"
+        f"The bot will wait until you complete the authorization.",
+        parse_mode="Markdown"
     )
-    auth_url, _ = flow.authorization_url(prompt='consent', access_type='offline')
-    auth_flows[user_id] = flow
 
-    keyboard = [
-        [InlineKeyboardButton("🔗 Authentication link", url=auth_url)]
-    ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
+    # Step 3: Poll Google's token endpoint until authorized
+    token_url = "https://oauth2.googleapis.com/token"
+    start_time = time.time()
+    timeout = 300  # seconds
 
-    await update.message.reply_text(f"🔗 Please authorize access, then paste the code here:", reply_markup=reply_markup)
+    while time.time() - start_time < timeout:
+        time.sleep(interval)
+        token_response = requests.post(
+            token_url,
+            data={
+                "client_id": client_id,
+                "client_secret": client_secret,
+                "device_code": device_code,
+                "grant_type": "urn:ietf:params:oauth:grant-type:device_code",
+            },
+        )
+        if token_response.status_code == 200:
+            token_data = token_response.json()
+            creds = token_data
+            with open(TOKEN_PATH, "wb") as token_file:
+                pickle.dump(creds, token_file)
+            await send_message(user_id, "✅ Google Drive authentication successful.")
+            return True
+        elif token_response.status_code == 428 or token_response.status_code ==  authorization_pending:
+            continue
+        else:
+            await send_message(user_id, f"❌ Authentication failed: {token_response.json().get('error_description')}")
+            return False
 
-
-async def finish_auth_conversation(user_id, code):
-    flow = auth_flows.get(user_id)
-    if not flow:
-        await send_message(user_id, "⚠️ No active authorization flow. Please try /auth again.")
-        return False
-    try:
-        flow.fetch_token(code=code)
-        creds = flow.credentials
-        with open(TOKEN_PATH, 'wb') as token_file:
-            pickle.dump(creds, token_file)
-        await send_message(user_id, "✅ Google Drive authentication successful.")
-        auth_flows.pop(user_id, None)
-        return True
-    except Exception as e:
-        await send_message(user_id, f"❌ Authentication failed: {e}")
-        return False
+    await send_message(user_id, "❌ Authentication timed out. Please try again.")
+    return False
