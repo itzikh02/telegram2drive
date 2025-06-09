@@ -8,7 +8,7 @@ from googleapiclient.http import MediaFileUpload
 
 from utils.bot_utils import send_message
 
-# If modifying these scopes, delete the file token.pickle.
+# If modifying these scopes, delete the file token.json.
 SCOPES = ['https://www.googleapis.com/auth/drive.file']
 
 def get_drive_service():
@@ -17,7 +17,7 @@ def get_drive_service():
         with open('token.json', 'r') as token:
             token_data = json.load(token)
 
-        with open("utils/client_tv.json") as f:
+        with open("credentials.json") as f:
             client_info = json.load(f)["installed"]
 
         creds = Credentials(
