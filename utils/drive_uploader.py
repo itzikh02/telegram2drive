@@ -37,7 +37,7 @@ def upload_file_to_drive(file_path: str, file_name: str, folder_id: str = None):
     :param folder_id: Optional folder ID to upload into.
     :return: The uploaded file's ID.
     """
-    service = get_drive_service()
+    service = get_drive_service(None, None)  # Update with actual update and context if needed
     file_metadata = {'name': file_name}
 
     if folder_id:
