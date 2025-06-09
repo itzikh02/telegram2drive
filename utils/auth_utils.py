@@ -101,8 +101,8 @@ async def start_auth_conversation(user_id, update: Update):
     if await check_auth():
         await send_message(user_id, "🔐 You are already authenticated.")
         return True
-    
-    with open("client_tv.json") as f:
+
+    with open("credentials.json") as f:
         client_info = json.load(f)["installed"]
 
     client_id = client_info["client_id"]
