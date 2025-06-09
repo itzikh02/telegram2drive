@@ -1,10 +1,13 @@
 import os
-from dotenv import load_dotenv
 import asyncio
 
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from dotenv import load_dotenv
+
+from telegram import Update
 from telegram.ext import ContextTypes
 from google.auth.transport.requests import Request
+from google.auth.exceptions import RefreshError
+from googleapiclient.discovery import build
 
 # Reconstruct credentials object from raw token data
 from google.oauth2.credentials import Credentials
@@ -73,13 +76,21 @@ async def check_auth():
         )
 
         if creds and creds.valid:
-            return True
+            try:
+                service = build("drive", "v3", credentials=creds)
+                service.files().list(pageSize=1).execute()
+                return True
+            except Exception as e:
+                if os.path.exists(TOKEN_PATH):
+                    # os.remove(TOKEN_PATH)
+                    await log_to_channel("🧨 Auth token will be deleted 1")
+                await log_to_channel("🧨 Access token appeared valid but failed API call. Token deleted.")
+                return False
 
         # Refresh if needed
         if creds and creds.expired and creds.refresh_token:
             try:
                 creds.refresh(Request())
-                # Save updated credentials
                 updated_token_data = {
                     "access_token": creds.token,
                     "refresh_token": creds.refresh_token,
@@ -89,6 +100,13 @@ async def check_auth():
                 }
                 with open(TOKEN_PATH, 'w') as token_file:
                     json.dump(updated_token_data, token_file)
+            except RefreshError as e:
+                if "invalid_grant" in str(e):
+                    if os.path.exists(TOKEN_PATH):
+                        # os.remove(TOKEN_PATH)
+                        await log_to_channel("🧨 Auth token will be deleted 2")
+                    await log_to_channel("🧨 Auth token was invalid or revoked. Token file was deleted.")
+                return False
             except Exception:
                 return False
             
