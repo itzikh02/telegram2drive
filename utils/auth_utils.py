@@ -96,6 +96,14 @@ async def check_auth():
         return bool(creds and creds.valid)
     return False
 
+def require_auth(handler_func):
+    async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        if not await check_auth():
+            await send_message(update.effective_user.id, "🔐 Please authenticate first with /auth")
+            return
+        return await handler_func(update, context)
+    return wrapper
+
 auth_flows = {}
 
 async def start_auth_conversation(user_id, update: Update):
