@@ -95,7 +95,7 @@ python bot.py
 
 ## 📌 Notes
 
-- The bot uses Telegram **Local Bot API**, not the cloud-based API.
+- The bot uses Telegram [**Local Bot API**](https://github.com/tdlib/telegram-bot-api), not the cloud-based API.
 - You must run the local Telegram Bot API server separately.
 - Files are first saved locally, then uploaded to Google Drive, and then cleaned up if needed.
 
