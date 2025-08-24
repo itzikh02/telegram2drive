@@ -1,0 +1,15 @@
+[Unit]
+Description=Telegram2Drive Bot
+After=network.target
+
+[Service]
+User=root
+WorkingDirectory=/opt/telegram-bots/telegram2drive
+EnvironmentFile=/opt/telegram-bots/telegram2drive/.env
+ExecStart=/opt/telegram-bots/telegram2drive/.venv/bin/python bot.py
+Restart=always
+RestartSec=5
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target
