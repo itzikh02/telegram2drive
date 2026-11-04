@@ -8,7 +8,7 @@ from utils.bot_application import app
 from utils.bot_utils import send_message, log_to_channel
 from utils.auth_handler import auth_conv_handler
 from utils.auth_utils import authorized_only, check_auth
-from utils.file_handler import handle_file, unsupported_file, file_handler
+from utils.file_handler import handle_file, handle_media, file_handler, media_handler
 
 from utils.load_env import (
     BOT_TOKEN,
@@ -54,15 +54,13 @@ async def ping(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await log_to_channel(msg)
 
 file_handler = MessageHandler(filters.Document.ALL, handle_file)
-unsupported_handler = MessageHandler(
-    filters.PHOTO | filters.VIDEO | filters.AUDIO | filters.VOICE | filters.ANIMATION,
-    unsupported_file)
+media_handler = MessageHandler(filters.PHOTO | filters.VIDEO, handle_media)
 
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("ping", ping))
 
 app.add_handler(file_handler)
-app.add_handler(unsupported_handler)
+app.add_handler(media_handler)
 app.add_handler(auth_conv_handler)
 
 print("✅ Bot is running with Local Bot API. Send /ping to check.")

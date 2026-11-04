@@ -1,6 +1,6 @@
 from telegram import Update
 from telegram.ext import ContextTypes
-import os, time, logging, asyncio
+import os, time, logging, asyncio, mimetypes
 
 from telegram.ext import CommandHandler, MessageHandler, ContextTypes, filters
 
@@ -55,22 +55,41 @@ def wait_for_file_ready(path, timeout=60, interval=1):
     return False
 
 
-@authorized_only
-@require_auth
-async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
+def _get_media_info(message):
     """
-    Handle incoming files.
-    :param update: The update object containing the message.
-    :param context: The context object containing the bot instance.
-    """    
+    Extract file_id, file_name, and file_size from a message that contains
+    a document, photo, or video. Returns (file_id, file_name, file_size).
+    """
+    if message.document:
+        doc = message.document
+        return doc.file_id, doc.file_name, doc.file_size
 
-    document = update.message.document
-    file_id = document.file_id
-    file_name = document.file_name
-    file_size = document.file_size
+    if message.photo:
+        # Telegram sends multiple sizes; take the highest-resolution one.
+        photo = message.photo[-1]
+        file_name = f"photo_{photo.file_unique_id}.jpg"
+        return photo.file_id, file_name, photo.file_size
+
+    if message.video:
+        video = message.video
+        # Prefer the original file name when Telegram provides it.
+        ext = None
+        if video.mime_type:
+            ext = mimetypes.guess_extension(video.mime_type) or ".mp4"
+        else:
+            ext = ".mp4"
+        file_name = video.file_name or f"video_{video.file_unique_id}{ext}"
+        return video.file_id, file_name, video.file_size
+
+    return None, None, None
 
 
-    await log_to_channel(f"[DEBUG] Received file: {file_name} ({file_size} bytes)")
+async def _process_media(update: Update, context: ContextTypes.DEFAULT_TYPE, file_id: str, file_name: str, file_size: int):
+    """
+    Download a Telegram file by file_id and upload it to Google Drive.
+    Shared by handle_file and handle_media.
+    """
+    await log_to_channel(f"[DEBUG] Received: {file_name} ({file_size} bytes)")
 
     progress_message = await update.message.reply_text("⬇️ Starting Upload...")
 
@@ -83,9 +102,7 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await log_to_channel(f"[DEBUG] File not ready after timeout: {file_path}")
 
         with open(file_path, 'rb') as src, open(local_path, 'wb') as dst:
-            
             downloaded = 0
-            
             last_progress = 0
             while True:
                 chunk = src.read(8192)
@@ -93,49 +110,70 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     break
                 dst.write(chunk)
                 downloaded += len(chunk)
-                progress_percent = int((downloaded / file_size) * 100)
-
-                if progress_percent >= last_progress + 5:
-                    last_progress = progress_percent
-                    try:
-                        await progress_message.edit_text(
-                            f"📥 Uploading file: {progress_percent}% ({downloaded / (1024 * 1024):.2f} MB / {file_size / (1024 * 1024):.2f} MB)"
-                        )
-                    except Exception as e:
-                        logging.warning(f"Failed to update progress message: {e}")
-
+                if file_size:
+                    progress_percent = int((downloaded / file_size) * 100)
+                    if progress_percent >= last_progress + 5:
+                        last_progress = progress_percent
+                        try:
+                            await progress_message.edit_text(
+                                f"📥 Uploading: {progress_percent}% "
+                                f"({downloaded / (1024 * 1024):.2f} MB / {file_size / (1024 * 1024):.2f} MB)"
+                            )
+                        except Exception as e:
+                            logging.warning(f"Failed to update progress message: {e}")
 
         await log_to_channel(f"[DEBUG] File copied to: {local_path}")
 
         # Remove the file from the bot media temp folder after copying
         os.remove(file_path)
 
-        await log_to_channel(f"📥 Downloaded file: {file_name} ({file_size} bytes)")
+        await log_to_channel(f"📥 Downloaded: {file_name} ({file_size} bytes)")
 
-        # Upload to Google 
+        # Upload to Google Drive
         upload_file_to_drive(local_path, file_name, folder_id=DRIVE_FOLDER_ID)
-        await update.message.reply_text(f"✅ File uploaded to Google Drive")
+        await update.message.reply_text(f"✅ Uploaded to Google Drive: `{file_name}`", parse_mode="Markdown")
 
     except Exception as e:
         await send_message(update.effective_user.id, f"❌ Error: {e}")
         await log_to_channel(f"❌ Error saving file: {e}")
 
+
 @authorized_only
-async def unsupported_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
+@require_auth
+async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
-    Handle unsupported file types.
+    Handle incoming document files.
     :param update: The update object containing the message.
     :param context: The context object containing the bot instance.
     """
-    await update.message.reply_text(
-        "⚠️ Please send the file as a *Document* (not as a photo, video, or audio). Use the 📎 icon → File.",
-        parse_mode="Markdown"
-    )
+    document = update.message.document
+    file_id = document.file_id
+    file_name = document.file_name
+    file_size = document.file_size
+
+    await _process_media(update, context, file_id, file_name, file_size)
+
+
+@authorized_only
+@require_auth
+async def handle_media(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    Handle incoming photo and video messages (including when sent with a caption/text).
+    :param update: The update object containing the message.
+    :param context: The context object containing the bot instance.
+    """
+    file_id, file_name, file_size = _get_media_info(update.message)
+
+    if not file_id:
+        await update.message.reply_text("⚠️ Could not extract media from this message.")
+        return
+
+    await _process_media(update, context, file_id, file_name, file_size)
+
 
 file_handler = MessageHandler(filters.Document.ALL, handle_file)
 
-unsupported_handler = MessageHandler(
-    filters.PHOTO | filters.VIDEO | filters.AUDIO | filters.VOICE | filters.ANIMATION,
-    unsupported_file)
+media_handler = MessageHandler(filters.PHOTO | filters.VIDEO, handle_media)
+
 
     
